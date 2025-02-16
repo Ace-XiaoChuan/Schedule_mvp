@@ -17,6 +17,13 @@ class Database:
         # 不commit，可能只保存在内存里，容易回滚
         self.conn.commit()
 
+    def insert_task(self, title, due_time):
+        """插入新任务"""
+        self.conn.execute(
+            "INSERT INTO tasks (title, due_time) VALUES (?, ?)",
+            (title, due_time)
+        )
+        self.conn.commit()
 
 if __name__ == "__main__":
     db = Database()
