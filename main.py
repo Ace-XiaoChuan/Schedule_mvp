@@ -24,7 +24,7 @@ class App:
         # test_btn.pack()
 
         self._build_task_form()  # 加载上面那个表单
-        self._build_task_list()  # 加载任务列表
+        self._build_task_list()  # 加载下面任务列表
 
     def _test_db(self):
         # 测试数据库连接
@@ -101,13 +101,16 @@ class App:
     def _refresh_task_list(self):
         """从数据库重新加载数据并更新列表"""
         # 清空现有数据
+        # get_children()返回所有子项，
         for item in self.task_list.get_children():
             self.task_list.delete(item)
 
-        # 从数据库读取数据
+        # 按时间从数据库读取数据
+        # 关于cursor这个游标：sqlite3里，cursor就是sqlite3.Cursor类型，类似指针，
+        # 使用它是因为他是可迭代对象，可以for _ in...这么用，不用纠结他是什么类型，只需要知道默认迭代返回的是元组即可
         cursor = self.db.conn.execute("SELECT id, title, due_time FROM tasks ORDER BY due_time")
         for row in cursor:
-            # 插入到列表末尾
+            # ttk的insert()方法：
             self.task_list.insert("", tk.END, values=row)
 
 
