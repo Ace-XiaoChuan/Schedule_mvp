@@ -45,18 +45,18 @@ class App:
 
         # 标题输入，Label放在form_frame这个容器里，
         # grid是一个布局管理器，第一行第一列，sticky="w"，w就是west向左对齐
-        tk.Label(form_frame, text="任务标题：").grid(row=0, column=0, sticky="w")
-        self.title_entry = tk.Entry(form_frame, width=30)
-        self.title_entry.grid(row=0, column=1)
+        # tk.Label(form_frame, text="任务标题：").grid(row=0, column=0, sticky="w")
+        # self.title_entry = tk.Entry(form_frame, width=30)
+        # self.title_entry.grid(row=0, column=1)
 
         # 截止时间输入
-        tk.Label(form_frame, text="截止时间：").grid(row=1, column=0, sticky="w")
-        self.due_entry = tk.Entry(form_frame, width=30)
-        self.due_entry.grid(row=1, column=1)
+        # tk.Label(form_frame, text="截止时间：").grid(row=1, column=0, sticky="w")
+        # self.due_entry = tk.Entry(form_frame, width=30)
+        # self.due_entry.grid(row=1, column=1)
 
         # 添加按钮
-        add_btn = tk.Button(form_frame, text="添加任务", command=self._add_task)
-        add_btn.grid(row=2, column=1, pady=10, sticky="e")
+        # add_btn = tk.Button(form_frame, text="添加任务", command=self._add_task)
+        # add_btn.grid(row=2, column=1, pady=10, sticky="e")
 
     def _add_task(self):
         title = self.title_entry.get()
@@ -110,7 +110,7 @@ class App:
         # 使用它是因为他是可迭代对象，可以for _ in...这么用，不用纠结他是什么类型，只需要知道默认迭代返回的是元组即可
         cursor = self.db.conn.execute("SELECT id, title, due_time FROM tasks ORDER BY due_time")
         for row in cursor:
-            # ttk的insert()方法：
+            # ttk的insert()方法：这里补充一下方法的解释：parent=''即作为顶级节点插入
             self.task_list.insert("", tk.END, values=row)
 
 
