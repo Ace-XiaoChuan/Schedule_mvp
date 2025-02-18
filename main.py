@@ -1,7 +1,9 @@
+import sqlite3
 import tkinter as tk
 from tkinter import ttk  # import不会把子模块也导进来，ttk是更现代的界面组件
 from database import Database
-
+import datetime
+import tkinter.messagebox as messagebox
 
 class App:
     def __init__(self):
@@ -11,6 +13,8 @@ class App:
         self.window = tk.Tk()
         self.window.title("我的日程管理系统")
         self._build_basic_ui()
+        self._build_auto_timer()
+        self.current_task = None
 
     def _build_basic_ui(self):
         # 暂时只添加一个按钮和标签
@@ -18,24 +22,17 @@ class App:
         # pack()进行布局管理，pad_y:y轴边距像素
         label.pack(pady=10)
 
-        # 在 Tkinter 里，command=self._test_db 不加括号 是因为 我只是传递函数的**引用**，而不是立即执行它。
-        # 注意是引用！！！
-        # test_btn = tk.Button(self.window, text="测试按钮", command=self._test_db)
-        # test_btn.pack()
-
         self._build_task_form()  # 加载上面那个表单
         self._build_task_list()  # 加载下面任务列表
 
-    def _test_db(self):
-        # 测试数据库连接
-        # execute(sql, params) 方法的内部逻辑会自动填充参数，
-        # Python 的数据库驱动（如 sqlite3）已经实现了这个机制。
-        # 它会找到 SQL 语句中的 ?，然后从参数元组中取值填入相应位置，
-        # 最终执行完整的 SQL 语句，同时避免注入攻击。此为最佳实践。
-        self.db.conn.execute("INSERT INTO tasks (title, due_time) VALUES (?, ?)",
-                             ("测试任务", "2025-05-20 10:00"))
-        self.db.conn.commit()
-        print("测试数据已插入数据库！")
+    # def _test_db(self):
+    #     # 测试数据库连接
+    #     # execute(sql, params) 方法的内部逻辑会自动填充参数，Python 的数据库驱动（如 sqlite3）已经实现了这个机制。
+    #     # 它会找到 SQL 语句中的 ?，然后从参数元组中取值填入相应位置，最终执行完整的 SQL 语句，同时避免注入攻击。此为最佳实践。
+    #     self.db.conn.execute("INSERT INTO tasks (title, due_time) VALUES (?, ?)",
+    #                          ("测试任务", "2025-05-20 10:00"))
+    #     self.db.conn.commit()
+    #     print("测试数据已插入数据库！")
 
     def _build_task_form(self):
         # 创建表单框架
@@ -43,11 +40,30 @@ class App:
         form_frame = tk.Frame(self.window)
         form_frame.pack(pady=20, padx=20, fill=tk.X)
 
+        # 分类选择:下拉菜单，索引即从第几个开始
+        tk.Label(form_frame, text="任务分类:").grid(row=0, column=0, sticky="w")
+        self.category_combo = ttk.Combobox(form_frame, values=["工作", "休闲", "睡眠"], state="readonly")
+        self.category_combo.grid(row=0, column=1)
+        self.category_combo.current(0)
+
         # 标题输入，Label放在form_frame这个容器里，
         # grid是一个布局管理器，第一行第一列，sticky="w"，w就是west向左对齐
-        # tk.Label(form_frame, text="任务标题：").grid(row=0, column=0, sticky="w")
-        # self.title_entry = tk.Entry(form_frame, width=30)
-        # self.title_entry.grid(row=0, column=1)
+        tk.Label(form_frame, text="任务标题：").grid(row=1, column=0, sticky="w")
+        self.title_entry = tk.Entry(form_frame, width=30)
+        self.title_entry.grid(row=1, column=1)
+
+        # 手动时间输入
+        tk.Label(form_frame, text="开始时间：").grid(row=2, column=0, sticky="w")
+        self.start_entry = tk.Entry(form_frame, width=20)
+        self.start_entry.grid(row=2, column=1, sticky="w")
+
+        tk.Label(form_frame, text="结束时间：").grid(row=3, column=0, sticky="w")
+        self.end_entry = tk.Entry(form_frame, width=20)
+        self.end_entry.grid(row=3, column=1, sticky="w")
+
+        # 添加手动任务按钮
+        manual_btn = tk.Button(form_frame, text="添加手动任务", command=self._add_manual_task)
+        manual_btn.grid(row=4, column=1, pady=10, sticky="e")
 
         # 截止时间输入
         # tk.Label(form_frame, text="截止时间：").grid(row=1, column=0, sticky="w")
@@ -57,6 +73,107 @@ class App:
         # 添加按钮
         # add_btn = tk.Button(form_frame, text="添加任务", command=self._add_task)
         # add_btn.grid(row=2, column=1, pady=10, sticky="e")
+
+    def _add_manual_task(self):
+        category = self.category_combo.get()
+        title = self.title_entry.get()
+        start_time = self.start_entry.get()
+        end_time = self.end_entry.get()
+
+        # 简单验证
+        if not title or not start_time:
+            tk.messagebox.showerror("错误", "任务标题和开始时间不能为空！")
+            return
+
+        try:
+            # 验证时间格式（可选，推荐使用 datetime 模块）
+            datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+            if end_time:
+                datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
+
+            # 插入数据库
+            self.db.conn.execute(
+                """INSERT INTO tasks 
+                (title, category, start_time, end_time, is_auto) 
+                VALUES (?, ?, ?, ?, ?)""",
+                (title, category, start_time, end_time, 0)  # is_auto=0 表示手动任务
+            )
+            self.db.conn.commit()
+
+            # 清空输入框
+            self.title_entry.delete(0, tk.END)
+            self.start_entry.delete(0, tk.END)
+            self.end_entry.delete(0, tk.END)
+
+            # 刷新任务列表
+            self._refresh_task_list()
+
+        except ValueError:
+            tk.messagebox.showerror("错误", "时间格式错误，请使用 YYYY-MM-DD HH:MM:SS 格式！")
+            return
+        except sqlite3.Error as e:
+            tk.messagebox.showerror("错误", f"数据库错误: {e}")
+            return
+    def _build_auto_timer(self):
+        timer_frame = tk.Frame(self.window)
+        timer_frame.pack(pady=10, fill=tk.X)
+
+        # 分类选择
+        tk.Label(timer_frame, text="任务分类：").pack(side=tk.LEFT)
+        self.auto_category = ttk.Combobox(timer_frame,
+                                          values=["工作", "休闲", "睡眠"],
+                                          state="readonly")
+        self.auto_category.pack(side=tk.LEFT)
+        self.auto_category.current(0)
+
+        # 开始/结束计时按钮：
+        self.start_btn = tk.Button(timer_frame, text="开始任务",
+                                   command=self._start_auto_task)
+        self.start_btn.pack(side=tk.LEFT, padx=10)
+        self.stop_btn = tk.Button(timer_frame, text="停止任务",
+                                  state=tk.DISABLED,
+                                  command=self._stop_auto_task)
+        self.stop_btn.pack(side=tk.LEFT)
+
+    def _start_auto_task(self):
+        # 记录开始时间
+        self.current_task = {
+            "title": "自动记录任务",
+            "category": self.auto_category.get(),
+            "start_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "is_auto": 1
+        }
+        # 更新按钮状态
+        self.start_btn.config(state=tk.DISABLED)
+        self.stop_btn.config(state=tk.NORMAL)
+        self.auto_category.config(state=tk.DISABLED)
+
+    def _stop_auto_task(self):
+        if self.current_task:
+            end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            # 插入数据库
+            self.db.conn.execute(
+                """INSERT INTO tasks
+                (title,category,start_time,end_time,is_auto)
+                VALUES (?,?,?,?,?,)""",
+                (self.current_task["title"],
+                 self.current_task["category"],
+                 self.current_task["start_time"],
+                 end_time,
+                 self.current_task["is_auto"])
+            )
+            self.db.conn.commit()
+
+            # 重置状态
+            self.current_task = None
+            # 三种状态：
+            # tk.NORMAL：控件可用，用户可以交互。
+            # tk.DISABLED：控件不可用，用户无法交互。
+            # tk.ACTIVE：控件被激活，通常用于显示控件的激活状态
+            self.start_btn.config(state=tk.NORMAL)
+            self.stop_btn.config(state=tk.DISABLED)
+            self.auto_category.config(state=tk.NORMAL)
+            self._refresh_task_list()
 
     def _add_task(self):
         title = self.title_entry.get()
@@ -70,32 +187,31 @@ class App:
 
     def _build_task_list(self):
         """创建任务列表的界面组件"""
-        # 创建一个框架容器,填充父元素
         self.list_frame = tk.Frame(self.window)
-        # expand=True尽可能扩充
         self.list_frame.pack(pady=20, fill=tk.BOTH, expand=True)
 
-        # 使用treeview，tasklist即任务列表，放在下面
+        # 修改列的定义
         self.task_list = ttk.Treeview(
             self.list_frame,
-            columns=("id", "title", "due_time"),
+            columns=("id", "title", "category", "start_time", "end_time", "duration"),
             show="headings",
             selectmode="browse"
         )
-        # 配置每一列的表头
-        self.task_list.heading("id", text="ID")
-        self.task_list.heading("title", text="任务标题")
-        self.task_list.heading("due_time", text="截止时间")
+        # 配置表头
+        columns = [
+            ("id", "ID", 50),
+            ("title", "任务标题", 150),
+            ("category", "分类", 80),
+            ("start_time", "开始时间", 150),
+            ("end_time", "结束时间", 150),
+            ("duration", "持续时间", 100)
+        ]
 
-        # 设置列的宽度和对齐方式
-        self.task_list.column("id", width=50, anchor="center")  # anchor居中
-        self.task_list.column("title", width=200)
-        self.task_list.column("due_time", width=150)
+        for col_id, text, width in columns:
+            self.task_list.heading(col_id, text=text)
+            self.task_list.column(col_id, width=width, anchor="center")
 
-        # 将列表放入界面
         self.task_list.pack(fill=tk.BOTH, expand=True)
-
-        # 立即加载一次数据
         self._refresh_task_list()
 
     def _refresh_task_list(self):
@@ -108,11 +224,19 @@ class App:
         # 按时间从数据库读取数据
         # 关于cursor这个游标：sqlite3里，cursor就是sqlite3.Cursor类型，类似指针，
         # 使用它是因为他是可迭代对象，可以for _ in...这么用，不用纠结他是什么类型，只需要知道默认迭代返回的是元组即可
-        cursor = self.db.conn.execute("SELECT id, title, due_time FROM tasks ORDER BY due_time")
+        cursor = self.db.conn.execute("""
+            SELECT id, title, category, start_time, end_time,
+               (strftime('%s', end_time) - strftime('%s', start_time)) 
+            FROM tasks 
+            WHERE end_time IS NOT NULL
+            ORDER BY start_time DESC
+            """)
         for row in cursor:
             # ttk的insert()方法：这里补充一下方法的解释：parent=''即作为顶级节点插入
-            self.task_list.insert("", tk.END, values=row)
-
+            # self.task_list.insert("", tk.END, values=row)
+            duration = f"{row[5] // 3600}小时{row[5] % 3600 // 60}分钟" if row[5] else "进行中"
+            self.task_list.insert("", tk.END, values=(row[0], row[1], row[2],
+                                                      row[3], row[4], duration))
 
 if __name__ == "__main__":
     app = App()

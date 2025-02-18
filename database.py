@@ -11,7 +11,7 @@ class Database:
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
-                category TEXT NOT NULL CHECK(category IN ('工作','休闲','睡眠'))，
+                category TEXT NOT NULL CHECK(category IN ('工作','休闲','睡眠')),
                 start_time TEXT NOT NULL,
                 end_time TEXT,
                 is_auto BOOLEAN NOT NULL -- 0:手动记录，1:自动记录
