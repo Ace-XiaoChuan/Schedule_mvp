@@ -5,6 +5,7 @@ from database import Database
 import datetime
 import tkinter.messagebox as messagebox
 
+
 class App:
     def __init__(self):
         # 连接数据库
@@ -17,46 +18,34 @@ class App:
         self.current_task = None
 
     def _build_basic_ui(self):
-        # 暂时只添加一个按钮和标签
         label = tk.Label(self.window, text="欢迎使用日程管理系统！")
-        # pack()进行布局管理，pad_y:y轴边距像素
         label.pack(pady=10)
 
         self._build_task_form()  # 加载上面那个表单
         self._build_task_list()  # 加载下面任务列表
 
-    # def _test_db(self):
-    #     # 测试数据库连接
-    #     # execute(sql, params) 方法的内部逻辑会自动填充参数，Python 的数据库驱动（如 sqlite3）已经实现了这个机制。
-    #     # 它会找到 SQL 语句中的 ?，然后从参数元组中取值填入相应位置，最终执行完整的 SQL 语句，同时避免注入攻击。此为最佳实践。
-    #     self.db.conn.execute("INSERT INTO tasks (title, due_time) VALUES (?, ?)",
-    #                          ("测试任务", "2025-05-20 10:00"))
-    #     self.db.conn.commit()
-    #     print("测试数据已插入数据库！")
-
     def _build_task_form(self):
         # 创建表单框架
-        # fill=tk.x以横轴为标准拉伸至填充父元素
         form_frame = tk.Frame(self.window)
         form_frame.pack(pady=20, padx=20, fill=tk.X)
 
-        # 分类选择:下拉菜单，索引即从第几个开始
+        # 第一项：任务分类（要有一个下拉菜单）。
         tk.Label(form_frame, text="任务分类:").grid(row=0, column=0, sticky="w")
         self.category_combo = ttk.Combobox(form_frame, values=["工作", "休闲", "睡眠"], state="readonly")
         self.category_combo.grid(row=0, column=1)
         self.category_combo.current(0)
 
-        # 标题输入，Label放在form_frame这个容器里，
-        # grid是一个布局管理器，第一行第一列，sticky="w"，w就是west向左对齐
+        # 第二项：任务标题
         tk.Label(form_frame, text="任务标题：").grid(row=1, column=0, sticky="w")
         self.title_entry = tk.Entry(form_frame, width=30)
         self.title_entry.grid(row=1, column=1)
 
-        # 手动时间输入
+        # 第三项：开始时间
         tk.Label(form_frame, text="开始时间：").grid(row=2, column=0, sticky="w")
         self.start_entry = tk.Entry(form_frame, width=20)
         self.start_entry.grid(row=2, column=1, sticky="w")
 
+        # 第四项：结束时间
         tk.Label(form_frame, text="结束时间：").grid(row=3, column=0, sticky="w")
         self.end_entry = tk.Entry(form_frame, width=20)
         self.end_entry.grid(row=3, column=1, sticky="w")
@@ -65,15 +54,6 @@ class App:
         manual_btn = tk.Button(form_frame, text="添加手动任务", command=self._add_manual_task)
         manual_btn.grid(row=4, column=1, pady=10, sticky="e")
 
-        # 截止时间输入
-        # tk.Label(form_frame, text="截止时间：").grid(row=1, column=0, sticky="w")
-        # self.due_entry = tk.Entry(form_frame, width=30)
-        # self.due_entry.grid(row=1, column=1)
-
-        # 添加按钮
-        # add_btn = tk.Button(form_frame, text="添加任务", command=self._add_task)
-        # add_btn.grid(row=2, column=1, pady=10, sticky="e")
-
     def _add_manual_task(self):
         category = self.category_combo.get()
         title = self.title_entry.get()
@@ -81,12 +61,16 @@ class App:
         end_time = self.end_entry.get()
 
         # 简单验证
+        # 在 C/C++/Java 等语言中，return 必须显式返回值（或声明为 void 函数）。
+        # 在 Python 中，函数默认返回 None，因此 return 可单独使用。
         if not title or not start_time:
             tk.messagebox.showerror("错误", "任务标题和开始时间不能为空！")
             return
 
         try:
-            # 验证时间格式（可选，推荐使用 datetime 模块）
+            # 验证时间格式
+            # datetime的datetime的strptime时间模板太多了，链接记于此，时时查阅：
+            # https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
             datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
             if end_time:
                 datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
@@ -114,6 +98,7 @@ class App:
         except sqlite3.Error as e:
             tk.messagebox.showerror("错误", f"数据库错误: {e}")
             return
+
     def _build_auto_timer(self):
         timer_frame = tk.Frame(self.window)
         timer_frame.pack(pady=10, fill=tk.X)
@@ -237,6 +222,7 @@ class App:
             duration = f"{row[5] // 3600}小时{row[5] % 3600 // 60}分钟" if row[5] else "进行中"
             self.task_list.insert("", tk.END, values=(row[0], row[1], row[2],
                                                       row[3], row[4], duration))
+
 
 if __name__ == "__main__":
     app = App()
