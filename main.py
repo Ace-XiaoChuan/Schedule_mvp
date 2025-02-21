@@ -2,20 +2,23 @@ import sqlite3
 import tkinter as tk
 from tkinter import ttk  # import不会把子模块也导进来，ttk是更现代的界面组件
 from database import Database
-import datetime
+from datetime import datetime
 import tkinter.messagebox as messagebox
+from models import TaskModels
 
 
 class App:
     def __init__(self):
         # 连接数据库
-        self.db = Database()
+        # ???db_path="schedule.db"参数可不可以不传
+        self.db = TaskModels()
         # Tk() 是 Tkinter 库中的一个构造方法,就只创建一个根窗口
         self.window = tk.Tk()
         self.window.title("我的日程管理系统")
         self._build_basic_ui()
         self._build_auto_timer()
-        self.current_task = None
+        self.current_task = None  # 当前无正在执行的任务，
+        # 这个拿来作为自动计时的flag
 
     def _build_basic_ui(self):
         label = tk.Label(self.window, text="欢迎使用日程管理系统！")
@@ -55,6 +58,7 @@ class App:
         manual_btn.grid(row=4, column=1, pady=10, sticky="e")
 
     def _add_manual_task(self):
+        # 添加手动任务
         category = self.category_combo.get()
         title = self.title_entry.get()
         start_time = self.start_entry.get()
@@ -68,36 +72,16 @@ class App:
             return
 
         try:
-            # 验证时间格式
-            # datetime的datetime的strptime时间模板太多了，链接记于此，时时查阅：
-            # https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
-            datetime.datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
-            if end_time:
-                datetime.datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
-
-            # 插入数据库
-            self.db.conn.execute(
-                """INSERT INTO tasks 
-                (title, category, start_time, end_time, is_auto) 
-                VALUES (?, ?, ?, ?, ?)""",
-                (title, category, start_time, end_time, 0)  # is_auto=0 表示手动任务
-            )
-            self.db.conn.commit()
-
+            # 重构之后只调用models部分的add_manual_tasks方法
+            self.db.add_manual_task(title, category, start_time, end_time)
             # 清空输入框
             self.title_entry.delete(0, tk.END)
             self.start_entry.delete(0, tk.END)
             self.end_entry.delete(0, tk.END)
-
             # 刷新任务列表
             self._refresh_task_list()
-
-        except ValueError:
-            tk.messagebox.showerror("错误", "时间格式错误，请使用 YYYY-MM-DD HH:MM:SS 格式！")
-            return
-        except sqlite3.Error as e:
-            tk.messagebox.showerror("错误", f"数据库错误: {e}")
-            return
+        except Exception as e:
+            tk.messagebox.showerror("错误", message=str(e))
 
     def _build_auto_timer(self):
         timer_frame = tk.Frame(self.window)
@@ -134,31 +118,31 @@ class App:
         self.auto_category.config(state=tk.DISABLED)
 
     def _stop_auto_task(self):
+        # 暂停自动任务计时
         if self.current_task:
             end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            # 插入数据库
-            self.db.conn.execute(
-                """INSERT INTO tasks
-                (title,category,start_time,end_time,is_auto)
-                VALUES (?,?,?,?,?,)""",
-                (self.current_task["title"],
-                 self.current_task["category"],
-                 self.current_task["start_time"],
-                 end_time,
-                 self.current_task["is_auto"])
-            )
-            self.db.conn.commit()
+            try:
+                # 调用TaskModels的add_auto_task方法
+                self.db.add_auto_task(
+                    self.current_task["title"],
+                    self.current_task["category"],
+                    self.current_task["start_time"],
+                    end_time
+                )
+                # 重置状态,回到最初
+                self.current_task = None
+                self.start_btn.config(state=tk.NORMAL)
+                self.stop_btn.config(state=tk.DISABLED)
+                self.auto_category.config(state=tk.NORMAL)
+                self._refresh_task_list()
 
-            # 重置状态
-            self.current_task = None
+            except Exception as e:
+                tk.messagebox.showerror("错误", str(e))
+
             # 三种状态：
             # tk.NORMAL：控件可用，用户可以交互。
             # tk.DISABLED：控件不可用，用户无法交互。
             # tk.ACTIVE：控件被激活，通常用于显示控件的激活状态
-            self.start_btn.config(state=tk.NORMAL)
-            self.stop_btn.config(state=tk.DISABLED)
-            self.auto_category.config(state=tk.NORMAL)
-            self._refresh_task_list()
 
     def _add_task(self):
         title = self.title_entry.get()
@@ -206,22 +190,20 @@ class App:
         for item in self.task_list.get_children():
             self.task_list.delete(item)
 
-        # 按时间从数据库读取数据
-        # 关于cursor这个游标：sqlite3里，cursor就是sqlite3.Cursor类型，类似指针，
-        # 使用它是因为他是可迭代对象，可以for _ in...这么用，不用纠结他是什么类型，只需要知道默认迭代返回的是元组即可
-        cursor = self.db.conn.execute("""
-            SELECT id, title, category, start_time, end_time,
-               (strftime('%s', end_time) - strftime('%s', start_time)) 
-            FROM tasks 
-            WHERE end_time IS NOT NULL
-            ORDER BY start_time DESC
-            """)
-        for row in cursor:
-            # ttk的insert()方法：这里补充一下方法的解释：parent=''即作为顶级节点插入
-            # self.task_list.insert("", tk.END, values=row)
-            duration = f"{row[5] // 3600}小时{row[5] % 3600 // 60}分钟" if row[5] else "进行中"
-            self.task_list.insert("", tk.END, values=(row[0], row[1], row[2],
-                                                      row[3], row[4], duration))
+        try:
+            # 调用models里的get_all_tasks方法来解耦
+            tasks = self.db.get_all_tasks()
+            for row in tasks:
+                # ttk的insert()方法：这里补充一下方法的解释：parent=''即作为顶级节点插入
+                # self.task_list.insert("", tk.END, values=row)
+                duration = f"{row[5] // 3600}小时{row[5] % 3600 // 60}分钟" if row[5] else "进行中"
+                self.task_list.insert("", tk.END, values=(row[0], row[1], row[2],
+                                                          row[3], row[4], duration))
+        except Exception as e:
+            tk.messagebox.showerror("错误！",str(e))
+    def __del__(self):
+        """在程序退出后关闭与数据库的链接"""
+        self.db.close()
 
 
 if __name__ == "__main__":
