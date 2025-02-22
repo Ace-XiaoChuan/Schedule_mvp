@@ -28,6 +28,7 @@ class TaskModels:
         try:
             # 验证时间格式，model层应该负责做数据验证
             datetime.strptime(start_time, "%Y-%m-%d %H:%M:%S")
+            # 如果任务已完成：数据插入数据库
             if end_time:
                 datetime.strptime(end_time, "%Y-%m-%d %H:%M:%S")
 
