@@ -3,18 +3,34 @@ import tkinter as tk
 import tkinter.messagebox as messagebox
 from models import TaskModels
 from view import MainView
+from ai.ai_classifier import SimplyClassifier
 
 
 class TaskController:
     def __init__(self):
-        # 初始化模型与视图
+        # 初始化控制器：模型、视图
+        # 初始化分类器：ai训练模型
+        print("初始化控制器...")
         self.model = TaskModels()
         self.view = MainView()
 
-        # 绑定事件处理器1:设置手动任务处理器
+        print("初始化分类器...")
+        self.classifier = SimplyClassifier()
+
+        try:
+            self.classifier.train()  # 确保训练模型（或检查已有模型）
+        except Exception as e:
+            print(f"训练失败：{str(e)}")
+            return
+
+        print("绑定事件监听器...")
+        self.view.title_entry.bind("<KeyRelease>", self.auto_classify)
+        print("控制器初始化完成")
+
+        # 绑定事件处理器1:设置手动任务处理器（依赖倒置原则）
         self.view.set_manual_task_handler(self.handle_manual_task)
         # 绑定事件处理器2：设置自动任务处理器
-        self.view.set_auto_handlers(self.start_auto_task,self.stop_auto_task)
+        self.view.set_auto_handlers(self.start_auto_task, self.stop_auto_task)
 
         # 初始化任务列表
         self.refresh_task_list()
@@ -74,9 +90,32 @@ class TaskController:
         tasks = self.model.get_all_tasks()
         self.view.refresh_task_list(tasks)
 
+    def auto_classify(self, event):
+        text = self.view.title_entry.get()
+        print(f"检测到输入：{text}")
+
+        # 简单的过滤：
+        if len(text) < 2:
+            print("输入过段，跳过该次预测")
+            return
+        try:
+            print("尝试预测分类...")
+            predicted = self.classifier.predict(text)
+            print(f"预测结果：{predicted}")
+
+            # 确认视图组件访问
+            if hasattr(self.view, 'category_combo'):
+                self.view.category_combo.set(predicted)
+                print("已更新分类下拉框")
+            else:
+                print("❌ 找不到 category_combo 组件")
+        except Exception as e:
+            print(f"预测失败: {str(e)}")
+
     def run(self):
         """应用，启动"""
         self.view.run()
+
 
 if __name__ == "__main__":
     app = TaskController()

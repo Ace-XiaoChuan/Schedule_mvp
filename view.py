@@ -36,6 +36,9 @@ class MainView:
         self.title_entry = tk.Entry(form_frame, width=30)
         self.title_entry.grid(row=1, column=1)
 
+        # 调试输出
+        print("✅ 表单组件创建完成")
+
         # 第三项：开始时间
         tk.Label(form_frame, text="开始时间：").grid(row=2, column=0, sticky="w")
         self.start_entry = tk.Entry(form_frame, width=20)
@@ -177,7 +180,7 @@ class MainView:
         self.auto_category.config(state='readonly' if start_state == tk.NORMAL else tk.DISABLED)
 
     def run(self):
-        # 核心！启动事件循环；保证窗口存活；协调GUI更新
+        # 核心！无限循环、持续监听、随时准备触发回调函数
         self.window.mainloop()
 
 
