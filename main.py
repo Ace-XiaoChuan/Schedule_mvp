@@ -3,7 +3,7 @@ import tkinter as tk
 import tkinter.messagebox as messagebox
 from models import TaskModels
 from view import MainView
-from ai.ai_classifier import SimplyClassifier
+from ai.ai_classifier import SimpleClassifier
 
 
 class TaskController:
@@ -15,7 +15,7 @@ class TaskController:
         self.view = MainView()
 
         print("初始化分类器...")
-        self.classifier = SimplyClassifier()
+        self.classifier = SimpleClassifier()
 
         try:
             self.classifier.train()  # 确保训练模型（或检查已有模型）
@@ -24,6 +24,9 @@ class TaskController:
             return
 
         print("绑定事件监听器...")
+
+        # .bind()将一个事件与一个回调函数绑定。
+        # "<KeyRelease>" 是事件类型，表示键盘按键松开时触发。
         self.view.title_entry.bind("<KeyRelease>", self.auto_classify)
         print("控制器初始化完成")
 
