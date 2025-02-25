@@ -7,6 +7,7 @@ class Database:
         self._create_table()
 
     def _create_table(self):
+        """建表"""
         self.conn.execute("""
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -20,11 +21,12 @@ class Database:
         # 不commit，可能只保存在内存里，容易回滚
         self.conn.commit()
 
-    def insert_task(self, title, due_time):
-        """插入新任务"""
+    def insert_task(self, title, category, start_time, end_time=None, is_auto=0):
+        """插入新任务,默认手动记录类型"""
         self.conn.execute(
-            "INSERT INTO tasks (title, due_time) VALUES (?, ?)",
-            (title, due_time)
+            """INSERT INTO tasks 
+            (title, category,start_time,end_time,is_auto) VALUES (?,?,?,?,?)""",
+            (title, category, start_time, end_time, is_auto)
         )
         self.conn.commit()
 
