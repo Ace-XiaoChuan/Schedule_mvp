@@ -99,7 +99,7 @@ class TaskController:
 
         # 简单的过滤：
         if len(text) < 2:
-            print("输入过段，跳过该次预测")
+            print("输入过短，跳过该次预测")
             return
         try:
             print("尝试预测分类...")

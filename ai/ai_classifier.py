@@ -33,5 +33,5 @@ class SimpleClassifier:
         joblib.dump(self.model, self.model_path)
 
     def predict(self, text):
-        model = joblib.load('ai/simple_model.pkl')
+        model = joblib.load(self.model_path)
         return model.predict([text])[0]
