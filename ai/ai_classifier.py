@@ -34,7 +34,8 @@ class SimpleClassifier:
             # LinearSVC 是 scikit-learn 中的一个分类器，属于支持向量机（SVM）的一种实现。它用于进行线性分类，
             # 通过寻找一个超平面将不同类别的数据进行区分。这个步骤会使用从 TfidfVectorizer 输出的特征（TF-IDF 特征矩阵）来训练一个分类模型。
             # SVM 的核心思想是通过找到一个最佳的超平面（decision hyperplane）来分离不同类别的数据。
-            # 它在机器学习中非常流行，尤其是在小样本、特征较高的情境中表现出色。
+            # 它在机器学习中非常流行，尤其是在小样本、特征较高的情境中表现出色。最优超平面的选择标准是使得两类数据点之间的间隔最大化，
+            # 每个数据点都要满足它位于正确的类别一侧，即离超平面正确的一侧
             ('clf', LinearSVC())  # 分类器
         ])
 
@@ -56,6 +57,10 @@ class SimpleClassifier:
         # 计算置信度百分比（基于决策分数相对值）
         max_score = np.max(decision_score)
         min_score = np.min(decision_score)
+        # 三元表达式，if max_score != 0:
+        #     result = max_score
+        # else:
+        #     result = 1
         confidence = int(100 * (max_score - min_score) / (max_score if max_score != 0 else 1))
 
         return pred, min(100, max(0, confidence))  # 确保在0-100之间
