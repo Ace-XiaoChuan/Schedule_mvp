@@ -94,6 +94,7 @@ class TaskController:
         self.view.refresh_task_list(tasks)
 
     def auto_classify(self, event):
+        """自动分类"""
         text = self.view.title_entry.get()
         print(f"检测到输入：{text}")
 
@@ -114,6 +115,9 @@ class TaskController:
                 print("❌ 找不到 category_combo 组件")
         except Exception as e:
             print(f"预测失败: {str(e)}")
+
+        # 此条print仅仅用来打印，查看预期
+        print(f"当前分类框值：{self.view.category_combo.get()}")
 
     def run(self):
         """应用，启动"""
