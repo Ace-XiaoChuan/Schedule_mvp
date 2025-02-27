@@ -1,5 +1,6 @@
 import tkinter as tk
-from tkinter import ttk
+from datetime import datetime
+from tkinter import ttk, messagebox
 
 
 class MainView:
@@ -24,6 +25,8 @@ class MainView:
         # 创建表单框架
         form_frame = tk.Frame(self.window)
         form_frame.pack(pady=20, padx=20, fill=tk.X)
+        self.ai_result_label = ttk.Label(form_frame, text="AI分类：未识别")
+        self.ai_result_label.grid(row=1, column=2, padx=10)
 
         # 第一项：任务分类（要有一个下拉菜单）。
         tk.Label(form_frame, text="任务分类:").grid(row=0, column=0, sticky="w")
@@ -44,6 +47,12 @@ class MainView:
         self.start_entry = tk.Entry(form_frame, width=20)
         self.start_entry.grid(row=2, column=1, sticky="w")
 
+        # 第三点一项：默认时间
+        # 在时间输入框旁添加默认时间按钮
+        now_btn = ttk.Button(form_frame, text="当前时间",
+                             command=lambda: self._fill_current_time())
+        now_btn.grid(row=2, column=2)
+
         # 第四项：结束时间
         tk.Label(form_frame, text="结束时间：").grid(row=3, column=0, sticky="w")
         self.end_entry = tk.Entry(form_frame, width=20)
@@ -54,9 +63,15 @@ class MainView:
         self.manual_btn = tk.Button(form_frame, text="添加手动任务")
         self.manual_btn.grid(row=4, column=1, pady=10, sticky="e")
 
+
+
     def _build_auto_timer(self):
         timer_frame = tk.Frame(self.window)
         timer_frame.pack(pady=10, fill=tk.X)
+
+        # 在按钮组右侧添加计时状态标签
+        self.timer_status = ttk.Label(timer_frame, text="未开始计时")
+        self.timer_status.pack(side=tk.LEFT, padx=20)
 
         # 分类选择
         tk.Label(timer_frame, text="任务分类：").pack(side=tk.LEFT)
@@ -178,6 +193,22 @@ class MainView:
         self.start_btn.config(state=start_state)
         self.stop_btn.config(state=stop_state)
         self.auto_category.config(state='readonly' if start_state == tk.NORMAL else tk.DISABLED)
+
+    def show_confidence(self, category, confidence):
+        self.ai_result_label.config(
+            text=f"AI分类：{category} ({confidence}%置信度)",
+            foreground="#4CAF50" if confidence > 60 else "#FF5722"
+        )
+
+    def show_error(self,message):
+        """错误提示方法"""
+        messagebox.showerror("错误",message)
+
+    def _fill_current_time(self):
+        """此方法用于在_build_task_form()方法中自动填充当前时间于开始时间框"""
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.start_entry.delete(0, tk.END)
+        self.start_entry.insert(0, current_time)
 
     def run(self):
         # 核心！无限循环、持续监听、随时准备触发回调函数

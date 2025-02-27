@@ -64,6 +64,7 @@ class TaskController:
             "category": self.view.auto_category.get(),
             "start_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }
+        self.view.timer_status.config(text="计时中...", foreground="#2196F3")
         self.view.set_auto_controls_state(tk.DISABLED, tk.NORMAL)
 
     def stop_auto_task(self):
@@ -87,37 +88,30 @@ class TaskController:
 
         except Exception as e:
             messagebox.showerror("错误", str(e))
+        self.view.timer_status.config(text="计时已停止", foreground="#9E9E9E")
 
     def refresh_task_list(self):
         """刷新任务列表"""
         tasks = self.model.get_all_tasks()
         self.view.refresh_task_list(tasks)
 
-    def auto_classify(self, event):
-        """自动分类"""
+    def auto_classify(self, current_text):
+        """此方法用于自动将输入的内容分类，详情见ai/ai_classifier"""
+        """处理键盘输入事件"""
         text = self.view.title_entry.get()
-        print(f"检测到输入：{text}")
-
-        # 简单的过滤：
-        if len(text) < 2:
-            print("输入过短，跳过该次预测")
-            return
         try:
-            print("尝试预测分类...")
-            predicted = self.classifier.predict(text)
-            print(f"预测结果：{predicted}")
+            if len(text) < 3:
+                self.view.show_confidence("", 0)
+                return
 
-            # 确认视图组件访问
-            if hasattr(self.view, 'category_combo'):
-                self.view.category_combo.set(predicted)
-                print("已更新分类下拉框")
-            else:
-                print("❌ 找不到 category_combo 组件")
+            pred_category, confidence = self.classifier.predict(text)
+            self.view.show_confidence(pred_category, confidence)
+
         except Exception as e:
-            print(f"预测失败: {str(e)}")
+            print(f"自动分类异常：{str(e)}")
+            self.view.show_confidence("", 0)
 
-        # 此条print仅仅用来打印，查看预期
-        print(f"当前分类框值：{self.view.category_combo.get()}")
+
 
     def run(self):
         """应用，启动"""

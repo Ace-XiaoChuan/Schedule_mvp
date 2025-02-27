@@ -64,3 +64,8 @@ class SimpleClassifier:
         confidence = int(100 * (max_score - min_score) / (max_score if max_score != 0 else 1))
 
         return pred, min(100, max(0, confidence))  # 确保在0-100之间
+
+if __name__ == "__main__":
+    classifier = SimpleClassifier()
+    classifier.train()  # 新增训练步骤
+    print(classifier.predict("学习Python"))

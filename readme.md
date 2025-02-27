@@ -6,3 +6,15 @@
 详细的版本更新见CHANGELOG.MD
 - [版本0.x.x] 这个版本号已经做到了统计时间
 - [版本1.x.x] 这个版本号想要集成机器学习那部分的东西，待完成
+
+## 项目结构
+
+schedule_mvp/
+├─ main
+├─ database
+├─ models
+├─ view
+├─ ai/
+│  ├─ ai_classifier
+│  ├─ tasks.csv
+│  ├─ simple_model.pkl
