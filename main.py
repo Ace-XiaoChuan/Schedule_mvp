@@ -46,12 +46,13 @@ class TaskController:
             return
         # 如果非空：
         try:
-            self.model.add_manual_task(
-                data["title"],
-                data["category"],
-                data["start_time"],
-                data["end_time"]
-            )
+            self.model.add_task({
+                "title": data["title"],
+                "category": data["category"],
+                "start_time": data["start_time"],
+                "end_time": data["end_time"],
+                "is_auto": 0
+            })
             self.view.clear_manual_inputs()
             self.refresh_task_list()
         except Exception as e:
@@ -73,15 +74,17 @@ class TaskController:
         if not self.current_auto_task:
             return
 
+        # 如果当前有自动计时任务：
         end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
             # 把任务加入列表
-            self.model.add_auto_task(
-                self.current_auto_task["title"],
-                self.current_auto_task["category"],
-                self.current_auto_task["start_time"],
-                end_time
-            )
+            self.model.add_task({
+                "title": self.current_auto_task["title"],
+                "category": self.current_auto_task["category"],
+                "start_time": self.current_auto_task["start_time"],
+                "end_time": end_time,  # 使用新生成的结束时间
+                "is_auto": 1  # 明确标记为自动任务
+            })
             self.current_auto_task = None
             self.view.set_auto_controls_state(tk.NORMAL, tk.DISABLED)
             self.refresh_task_list()
@@ -110,8 +113,6 @@ class TaskController:
         except Exception as e:
             print(f"自动分类异常：{str(e)}")
             self.view.show_confidence("", 0)
-
-
 
     def run(self):
         """应用，启动"""
