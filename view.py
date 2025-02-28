@@ -63,8 +63,6 @@ class MainView:
         self.manual_btn = tk.Button(form_frame, text="添加手动任务")
         self.manual_btn.grid(row=4, column=1, pady=10, sticky="e")
 
-
-
     def _build_auto_timer(self):
         timer_frame = tk.Frame(self.window)
         timer_frame.pack(pady=10, fill=tk.X)
@@ -174,7 +172,10 @@ class MainView:
         self.stop_btn.config(command=stop_handler)
 
     def get_manual_task_data(self):
-        """此方法会返回手动任务的四个信息"""
+        """
+        此方法会返回手动任务的四个信息
+        :return: 以字典形式返回键为category\title\start_time\end_time的字典
+        """
         return {
             'category': self.category_combo.get(),
             'title': self.title_entry.get(),
@@ -200,9 +201,14 @@ class MainView:
             foreground="#4CAF50" if confidence > 60 else "#FF5722"
         )
 
-    def show_error(self,message):
-        """错误提示方法"""
-        messagebox.showerror("错误",message)
+    def show_error(self, message:str,error_type:str="error"):
+        """
+        错误提示方法,
+        :param message: 错误信息
+        :return: 弹窗错误报告
+        """
+
+        messagebox.showerror("错误", message)
 
     def _fill_current_time(self):
         """此方法用于在_build_task_form()方法中自动填充当前时间于开始时间框"""

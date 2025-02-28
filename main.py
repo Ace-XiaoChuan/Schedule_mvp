@@ -4,7 +4,8 @@ import tkinter.messagebox as messagebox
 from models import TaskModels
 from view import MainView
 from ai.ai_classifier import SimpleClassifier
-
+from services.task_service import TaskService
+from core.exceptions import ValidationError,AIClassificationError
 
 class TaskController:
     def __init__(self):
@@ -17,6 +18,9 @@ class TaskController:
         print("初始化分类器...")
         self.classifier = SimpleClassifier()
 
+        print("初始化仓储层...")
+        self.task_service = TaskService(self.model.repository)
+
         try:
             self.classifier.train()  # 确保训练模型（或检查已有模型）
         except Exception as e:
@@ -25,8 +29,6 @@ class TaskController:
 
         print("绑定事件监听器...")
 
-        # .bind()将一个事件与一个回调函数绑定。
-        # "<KeyRelease>" 是事件类型，表示键盘按键松开时触发。
         self.view.title_entry.bind("<KeyRelease>", self.auto_classify)
         print("控制器初始化完成")
 
@@ -41,20 +43,30 @@ class TaskController:
     def handle_manual_task(self):
         """处理手动任务的添加"""
         data = self.view.get_manual_task_data()
-        if not data["title"] or not data["start_time"]:
-            messagebox.showerror("错误！", "任务标题和开始的时间不能为空")
-            return
-        # 如果非空：
+        # 判断逻辑放到服务层了,同时引入分层错误验证功能
         try:
-            self.model.add_task({
-                "title": data["title"],
+            task_data={
+                "title":data["title"],
                 "category": data["category"],
                 "start_time": data["start_time"],
                 "end_time": data["end_time"],
                 "is_auto": 0
-            })
+            }
+            self.task_service.create_task(task_data)  # 调用服务层
             self.view.clear_manual_inputs()
             self.refresh_task_list()
+
+        except ValidationError as v:
+            # 处理输入验证类型错误
+            self.view.show_error(f"输入错误：{str(v)}",error_type="validation")
+
+        except AIClassificationError as e:
+            # 处理AI分类错误（业务逻辑问题）
+            self.view.show_error(f"分类失败: {str(e)}", error_type="ai")
+
+        except Exception as e:
+            # 处理其他未知错误（系统级问题）
+            self.view.show_error(f"系统错误: {str(e)}", error_type="system")
         except Exception as e:
             messagebox.showerror("错误", str(e))
 
