@@ -1,0 +1,14 @@
+flowchart TB
+    重构前[重构前代码结构] -->|提取服务层| 重构后[重构后代码结构]
+    
+    subgraph 重构前
+        A[Controller]
+        A --> B[直接操作Model]
+        A --> C[直接处理业务逻辑]
+    end
+    
+    subgraph 重构后
+        D[Controller] --> E[调用Service]
+        E[Service] --> F[操作Model]
+        E --> G[使用Repository]
+    end

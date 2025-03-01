@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant View as 视图层 (view.py)
+    participant Controller as 控制器 (main.py)
+    participant Service as 服务层 (services/task_service.py)
+    participant Repository as 仓储层 (repositories/task_repository.py)
+    participant DB as 数据库
+
+    View->>Controller: 用户点击"添加手动任务"按钮
+    Controller->>View: 调用get_manual_task_data()获取表单数据
+    View->>Controller: 返回表单数据字典
+    Controller->>Service: 调用create_manual_task(data)
+    Service->>Service: 1. 数据验证
+    Service->>Service: 2. AI分类校验
+    Service->>Repository: 3. 调用add_task()
+    Repository->>DB: 执行SQL插入操作
+    DB->>Repository: 返回新任务ID
+    Repository->>Service: 返回存储结果
+    Service->>Controller: 返回操作状态
+    Controller->>View: 调用clear_inputs()/show_error()

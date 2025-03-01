@@ -1,0 +1,49 @@
+
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant View as 视图层 (view.py)
+    participant Controller as 控制器 (main.py)
+    participant Model as 模型层 (models.py)
+    participant Database as 数据库
+
+    User->>View: 1. 填写表单并点击"添加手动任务"
+    activate View
+    View->>Controller: 2. 触发 handle_manual_task()
+    activate Controller
+
+    Controller->>View: 3. 调用 get_manual_task_data()
+    activate View
+    View-->>Controller: 返回表单数据 {title, category, ...}
+    deactivate View
+
+    Controller->>Controller: 4. 直接验证数据（无服务层）
+    Note over Controller: 控制器承担业务逻辑
+    
+    Controller->>Model: 5. 调用 add_manual_task()
+    activate Model
+    Model->>Database: 6. 执行原始SQL插入
+    activate Database
+    Database-->>Model: 返回操作结果
+    deactivate Database
+    Model-->>Controller: 返回任务ID
+    deactivate Model
+
+    alt 成功
+        Controller->>View: 7. 调用 clear_manual_inputs()
+        activate View
+        View-->>User: 清空表单
+        deactivate View
+        Controller->>View: 8. 调用 refresh_task_list()
+        View->>Model: 9. 调用 get_all_tasks()
+        Model->>Database: 10. 查询所有任务
+        Database-->>Model: 返回数据
+        Model-->>View: 返回任务列表
+        View-->>User: 刷新任务列表显示
+    else 失败
+        Controller->>View: 7. 调用 show_error()
+        View-->>User: 显示错误弹窗
+    end
+    deactivate Controller
+    deactivate View
+```

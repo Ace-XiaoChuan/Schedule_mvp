@@ -47,99 +47,18 @@
 - 依赖注入 关注的是如何将对象所依赖的外部资源由外部传入，从而实现模块间的解耦与可测试性提高。
 - 职责转移 则是将某个模块的部分职责交给其他更专门的模块来处理，从而实现关注点分离和系统整体的模块化设计。
 - 下图是从mcv转为分层设计后的序列图，可以看到虽然模块变多了，但是逻辑清楚了不少
+![序列图](assets/UML-diagram/UML-dia1/mermaid-diagram-2025-03-01-155215.svg)
 
-```mermaid
-sequenceDiagram
-    participant User as 用户
-    participant View as 视图层 (view.py)
-    participant Controller as 控制器 (main.py)
-    participant Model as 模型层 (models.py)
-    participant Database as 数据库
+![](assets/UML-diagram/UML-dia2/mermaid-diagram-2025-03-01-162441.svg)
 
-    User->>View: 1. 填写表单并点击"添加手动任务"
-    activate View
-    View->>Controller: 2. 触发 handle_manual_task()
-    activate Controller
 
-    Controller->>View: 3. 调用 get_manual_task_data()
-    activate View
-    View-->>Controller: 返回表单数据 {title, category, ...}
-    deactivate View
-
-    Controller->>Controller: 4. 直接验证数据（无服务层）
-    Note over Controller: 控制器承担业务逻辑
-    
-    Controller->>Model: 5. 调用 add_manual_task()
-    activate Model
-    Model->>Database: 6. 执行原始SQL插入
-    activate Database
-    Database-->>Model: 返回操作结果
-    deactivate Database
-    Model-->>Controller: 返回任务ID
-    deactivate Model
-
-    alt 成功
-        Controller->>View: 7. 调用 clear_manual_inputs()
-        activate View
-        View-->>User: 清空表单
-        deactivate View
-        Controller->>View: 8. 调用 refresh_task_list()
-        View->>Model: 9. 调用 get_all_tasks()
-        Model->>Database: 10. 查询所有任务
-        Database-->>Model: 返回数据
-        Model-->>View: 返回任务列表
-        View-->>User: 刷新任务列表显示
-    else 失败
-        Controller->>View: 7. 调用 show_error()
-        View-->>User: 显示错误弹窗
-    end
-    deactivate Controller
-    deactivate View
-```
-
-```mermaid
-sequenceDiagram
-    participant View as 视图层 (view.py)
-    participant Controller as 控制器 (main.py)
-    participant Service as 服务层 (services/task_service.py)
-    participant Repository as 仓储层 (repositories/task_repository.py)
-    participant DB as 数据库
-
-    View->>Controller: 用户点击"添加手动任务"按钮
-    Controller->>View: 调用get_manual_task_data()获取表单数据
-    View->>Controller: 返回表单数据字典
-    Controller->>Service: 调用create_manual_task(data)
-    Service->>Service: 1. 数据验证
-    Service->>Service: 2. AI分类校验
-    Service->>Repository: 3. 调用add_task()
-    Repository->>DB: 执行SQL插入操作
-    DB->>Repository: 返回新任务ID
-    Repository->>Service: 返回存储结果
-    Service->>Controller: 返回操作状态
-    Controller->>View: 调用clear_inputs()/show_error()
-```
-
-```mermaid
-flowchart TB
-    重构前[重构前代码结构] -->|提取服务层| 重构后[重构后代码结构]
-    
-    subgraph 重构前
-        A[Controller]
-        A --> B[直接操作Model]
-        A --> C[直接处理业务逻辑]
-    end
-    
-    subgraph 重构后
-        D[Controller] --> E[调用Service]
-        E[Service] --> F[操作Model]
-        E --> G[使用Repository]
-    end
-```
+![](assets/UML-diagram/UML-dia3/mermaid-diagram-2025-03-01-162623.svg)
 ## [1.0.4] - 2025-02-28
 ### Deprecated
 - 还原回了1.0.2，浪费了不少精力，但是实在是理不清方法之间的依赖关系了，之前的UML也白做了
 ### Fixed
 - 转而重构了以下内容,可以看到是重构了，但是只重构了一点点，下一次更新应该关注于控制器，控制器已经有点尾大不掉了
+
 ```mermaid
 sequenceDiagram
     participant View
@@ -159,8 +78,52 @@ sequenceDiagram
     Database-->>View: 返回任务数据
     View-->>User: 显示更新后的列表
 ```
----
+```mermaid
+%% 分层架构组件图
+graph TD
+    subgraph 用户界面层
+        V["View<br>(view.py)<br>- MainView<br>- 表单组件<br>- 任务列表"]
+    end
 
+    subgraph 应用控制层
+        C["Controller<br>(main.py)<br>- TaskController<br>- 事件绑定"]
+        CT["Container<br>(container.py)<br>- 依赖管理"]
+    end
+
+    subgraph 业务逻辑层
+        S["Service<br>(task_service.py)<br>- TaskService<br>- 业务规则验证"]
+        AI["AI Classifier<br>(ai_classifier.py)<br>- SimpleClassifier<br>- 训练/预测"]
+    end
+
+    subgraph 数据访问层
+        R["Repository<br>(task_repository.py)<br>- TaskRepository<br>- CRUD操作"]
+        M["Models<br>(models.py)<br>- TaskModels<br>- 数据库连接"]
+    end
+
+    subgraph 基础设施层
+        DB["(SQLite 数据库<br>schedule.db)"]
+        EX["Exceptions<br>(exceptions.py)<br>- DomainError<br>- ValidationError"]
+    end
+
+```
+```mermaid
+flowchart
+%% 数据流向
+    V -->|用户输入| C
+    C -->|调用业务逻辑| S
+    C -->|分类请求| AI
+    S -->|数据持久化| R
+    R -->|执行SQL| M
+    M -->|读写数据| DB
+    CT -->|依赖注入| M
+    CT -->|依赖注入| R
+    CT -->|依赖注入| S
+    CT -->|依赖注入| AI
+    EX -.->|异常传递| S
+    EX -.->|异常传递| R
+```
+---
+https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNp9UctOwlAQ_RUyayBSWoEuTOShKzfiypbFlV4esfQ2l1ZFIPFBNJrwMBgXSoxGTVxq4sKEoD9DW_gLL2-IxllMZs49c-ZMbhGSRMEgQkol-8kMooZrKyxrLhb986p9X7EuqtK06rafnIdjp91kbcLl8ayU7HrDqt_Yrap1-Wi9n5QmU42aNK0Wpkbao5w3d9IU6ZnZqhE-iFUpQjSDElXFNDEHD7a6wpJz92HXXuxmtdtpbbAL1F-cyJhjPVecxln385Y57B-1e19XYyrWlP_MNGozxei8maF6TOq9nTrXr3FM97JJPLc9Jk2wIXFN-ttkbPi6LnU730xmE-sknzUILczMgRtymOZQVmHfUxzAMhgZnMMyiKxUEN2VQdbKjIdMg8QLWhJEg5rYDZSY6QyIKaTmWWfqCjJwNIvYfbkpqiNtm5CFHsQiHIDoCwa8vF8ICH6B9_kEjnNDAUTOGwyEQv4QtxQKcMs8zwtlNxwOFXzlH83i5KU
 除了 Added（新增）和 Changed（变更）之外，常见的记录类型还有：
 
 Deprecated（弃用）

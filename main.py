@@ -5,21 +5,21 @@ from models import TaskModels
 from view import MainView
 from ai.ai_classifier import SimpleClassifier
 from services.task_service import TaskService
-from core.exceptions import ValidationError,AIClassificationError
+from core.exceptions import ValidationError, AIClassificationError
+from core.container import Container
+
 
 class TaskController:
     def __init__(self):
-        # 初始化控制器：模型、视图
-        # 初始化分类器：ai训练模型
         print("初始化控制器...")
-        self.model = TaskModels()
+        self.container = Container()
         self.view = MainView()
 
         print("初始化分类器...")
         self.classifier = SimpleClassifier()
 
-        print("初始化仓储层...")
-        self.task_service = TaskService(self.model.repository)
+        # 通过容器获取服务层的实例
+        self.task_service = self.container.task_service
 
         try:
             self.classifier.train()  # 确保训练模型（或检查已有模型）
@@ -45,8 +45,8 @@ class TaskController:
         data = self.view.get_manual_task_data()
         # 判断逻辑放到服务层了,同时引入分层错误验证功能
         try:
-            task_data={
-                "title":data["title"],
+            task_data = {
+                "title": data["title"],
                 "category": data["category"],
                 "start_time": data["start_time"],
                 "end_time": data["end_time"],
@@ -58,7 +58,7 @@ class TaskController:
 
         except ValidationError as v:
             # 处理输入验证类型错误
-            self.view.show_error(f"输入错误：{str(v)}",error_type="validation")
+            self.view.show_error(f"输入错误：{str(v)}", error_type="validation")
 
         except AIClassificationError as e:
             # 处理AI分类错误（业务逻辑问题）
@@ -67,8 +67,6 @@ class TaskController:
         except Exception as e:
             # 处理其他未知错误（系统级问题）
             self.view.show_error(f"系统错误: {str(e)}", error_type="system")
-        except Exception as e:
-            messagebox.showerror("错误", str(e))
 
     def start_auto_task(self):
         """启动自动计时类型的任务"""
@@ -126,11 +124,20 @@ class TaskController:
             print(f"自动分类异常：{str(e)}")
             self.view.show_confidence("", 0)
 
+    def shutdown(self):
+        # 关于为什么要显示的关闭数据库的连接，数据库的连接有点像句柄，会占用连接池
+        self.model.close()
+
     def run(self):
         """应用，启动"""
         self.view.run()
 
 
 if __name__ == "__main__":
+    # 入口点检查，表示当此文件被直接运行而非作为模块导入其他文件时。
     app = TaskController()
-    app.run()
+    try:
+        app.run()
+    finally:
+        # 无论正常还是崩溃都会shutdown
+        app.shutdown()
