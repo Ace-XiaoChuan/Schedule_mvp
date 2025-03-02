@@ -58,54 +58,8 @@
 - 还原回了1.0.2，浪费了不少精力，但是实在是理不清方法之间的依赖关系了，之前的UML也白做了
 ### Fixed
 - 转而重构了以下内容,可以看到是重构了，但是只重构了一点点，下一次更新应该关注于控制器，控制器已经有点尾大不掉了
-
-```mermaid
-sequenceDiagram
-    participant View
-    participant Controller
-    participant Model
-    participant Database
-    
-    View->>Controller: 点击"停止任务"
-    Controller->>Controller: 生成 end_time
-    Controller->>Model: add_task({title,category,start_time,end_time,is_auto=1})
-    Model->>Database: INSERT INTO tasks(...)
-    Database-->>Model: 返回新任务ID(cursor)
-    Model-->>Controller: 操作结果
-    Controller->>View: refresh_task_list()
-    View->>Model: get_all_tasks()
-    Model->>Database: SELECT * FROM tasks
-    Database-->>View: 返回任务数据
-    View-->>User: 显示更新后的列表
-```
-```mermaid
-%% 分层架构组件图
-graph TD
-    subgraph 用户界面层
-        V["View<br>(view.py)<br>- MainView<br>- 表单组件<br>- 任务列表"]
-    end
-
-    subgraph 应用控制层
-        C["Controller<br>(main.py)<br>- TaskController<br>- 事件绑定"]
-        CT["Container<br>(container.py)<br>- 依赖管理"]
-    end
-
-    subgraph 业务逻辑层
-        S["Service<br>(task_service.py)<br>- TaskService<br>- 业务规则验证"]
-        AI["AI Classifier<br>(ai_classifier.py)<br>- SimpleClassifier<br>- 训练/预测"]
-    end
-
-    subgraph 数据访问层
-        R["Repository<br>(task_repository.py)<br>- TaskRepository<br>- CRUD操作"]
-        M["Models<br>(models.py)<br>- TaskModels<br>- 数据库连接"]
-    end
-
-    subgraph 基础设施层
-        DB["(SQLite 数据库<br>schedule.db)"]
-        EX["Exceptions<br>(exceptions.py)<br>- DomainError<br>- ValidationError"]
-    end
-
-```
+![](assets/UML-diagram/UML-dia4/mermaid-diagram-2025-03-02-135357.svg)
+![](assets/UML-diagram/UML-dia5/mermaid-diagram-2025-03-02-140722.svg)
 ```mermaid
 flowchart
 %% 数据流向

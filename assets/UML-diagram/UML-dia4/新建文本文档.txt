@@ -1,0 +1,17 @@
+sequenceDiagram
+    participant View
+    participant Controller
+    participant Model
+    participant Database
+    
+    View->>Controller: 点击"停止任务"
+    Controller->>Controller: 生成 end_time
+    Controller->>Model: add_task({title,category,start_time,end_time,is_auto=1})
+    Model->>Database: INSERT INTO tasks(...)
+    Database-->>Model: 返回新任务ID(cursor)
+    Model-->>Controller: 操作结果
+    Controller->>View: refresh_task_list()
+    View->>Model: get_all_tasks()
+    Model->>Database: SELECT * FROM tasks
+    Database-->>View: 返回任务数据
+    View-->>User: 显示更新后的列表

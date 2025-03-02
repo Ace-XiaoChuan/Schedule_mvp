@@ -14,6 +14,7 @@ class TaskController:
         print("初始化控制器...")
         self.container = Container()
         self.view = MainView()
+        self.model=self.container.models
 
         print("初始化分类器...")
         self.classifier = SimpleClassifier()
@@ -88,7 +89,7 @@ class TaskController:
         end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
             # 把任务加入列表
-            self.model.add_task({
+            self.task_service.create_task({
                 "title": self.current_auto_task["title"],
                 "category": self.current_auto_task["category"],
                 "start_time": self.current_auto_task["start_time"],

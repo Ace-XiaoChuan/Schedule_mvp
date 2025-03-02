@@ -4,7 +4,6 @@ from tkinter import ttk, messagebox
 
 
 class MainView:
-    # Views结构,不包含任何业务逻辑！！！
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("我的日程管理系统")
@@ -39,9 +38,6 @@ class MainView:
         self.title_entry = tk.Entry(form_frame, width=30)
         self.title_entry.grid(row=1, column=1)
 
-        # 调试输出
-        print("✅ 表单组件创建完成")
-
         # 第三项：开始时间
         tk.Label(form_frame, text="开始时间：").grid(row=2, column=0, sticky="w")
         self.start_entry = tk.Entry(form_frame, width=20)
@@ -59,7 +55,6 @@ class MainView:
         self.end_entry.grid(row=3, column=1, sticky="w")
 
         # 添加手动任务按钮
-        # ???
         self.manual_btn = tk.Button(form_frame, text="添加手动任务")
         self.manual_btn.grid(row=4, column=1, pady=10, sticky="e")
 
@@ -116,7 +111,11 @@ class MainView:
         self.task_list.pack(fill=tk.BOTH, expand=True)
 
     def refresh_task_list(self, tasks):
-        """清除列表全部内容然后从数据库重新加载以达到刷新效果"""
+        """
+        清除列表全部内容然后从数据库重新加载以刷新
+        :param tasks: 由models/get_all_tasks
+        :return:
+        """
 
         # 清空现有数据
         # get_children()返回所有子项，

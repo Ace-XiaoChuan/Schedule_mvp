@@ -13,7 +13,10 @@ class TaskModels:
         return self.repository.add_task(task_data)
 
     def get_all_tasks(self):
-        """获取所有已完成的任务,按开始的时间降序排列"""
+        """
+        获取所有已完成的任务,按开始的时间降序排列
+        :return:返回一个列表，列表中的每个元素是一个元组，代表一行数据‌
+        """
         cursor = self.conn.execute("""
         SELECT id,title,category,start_time,end_time,
         (strftime('%s',end_time)-strftime('%s',start_time))

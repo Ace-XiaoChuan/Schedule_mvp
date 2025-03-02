@@ -12,8 +12,9 @@ from core.exceptions import ValidationError
 
 
 class TaskService:
-    def __init__(self, repository):
+    def __init__(self, repository, classifier):
         self.repository = repository
+        self.classifier = classifier
 
     def create_task(self, task_data: dict) -> int:
         """

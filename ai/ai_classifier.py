@@ -11,7 +11,6 @@ from pathlib import Path
 
 class SimpleClassifier:
     def __init__(self):
-        # 这个魔术方法用以返回当前**文件**的绝对路径,mmd
         self.script_dir = Path(__file__).parent
         self.data_path = self.script_dir / "tasks.csv"
         self.model_path = self.script_dir / "simple_model.pkl"

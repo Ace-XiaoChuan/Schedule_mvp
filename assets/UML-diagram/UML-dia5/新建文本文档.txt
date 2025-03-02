@@ -1,0 +1,25 @@
+%% 分层架构组件图
+graph TD
+    subgraph 用户界面层
+        V["View<br>(view.py)<br>- MainView<br>- 表单组件<br>- 任务列表"]
+    end
+
+    subgraph 应用控制层
+        C["Controller<br>(main.py)<br>- TaskController<br>- 事件绑定"]
+        CT["Container<br>(container.py)<br>- 依赖管理"]
+    end
+
+    subgraph 业务逻辑层
+        S["Service<br>(task_service.py)<br>- TaskService<br>- 业务规则验证"]
+        AI["AI Classifier<br>(ai_classifier.py)<br>- SimpleClassifier<br>- 训练/预测"]
+    end
+
+    subgraph 数据访问层
+        R["Repository<br>(task_repository.py)<br>- TaskRepository<br>- CRUD操作"]
+        M["Models<br>(models.py)<br>- TaskModels<br>- 数据库连接"]
+    end
+
+    subgraph 基础设施层
+        DB["(SQLite 数据库<br>schedule.db)"]
+        EX["Exceptions<br>(exceptions.py)<br>- DomainError<br>- ValidationError"]
+    end
