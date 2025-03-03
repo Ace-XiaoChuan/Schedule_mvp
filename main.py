@@ -14,7 +14,7 @@ class TaskController:
         print("初始化控制器...")
         self.container = Container()
         self.view = MainView()
-        self.model=self.container.models
+        self.model = self.container.models
 
         print("初始化分类器...")
         self.classifier = SimpleClassifier()

@@ -37,7 +37,8 @@ class SimpleClassifier:
             ('tfidf', TfidfVectorizer(
                 tokenizer=chinese_tokenizer,  # 添加自定义分词器
                 token_pattern=None,  # 禁用默认正则分词
-                max_features=5000  # 优化特征维度
+                max_features=5000,  # 优化特征维度
+                stop_words=["的","了","在","于","与","是"]
             )),
             # 第二个步骤：分类器。
             # LinearSVC 是 scikit-learn 中的一个分类器，属于支持向量机（SVM）的一种实现。它用于进行线性分类，
@@ -81,6 +82,11 @@ class SimpleClassifier:
         probs = exp_scores / exp_scores.sum()
         confidence = int(100 * probs.max())
         return pred, confidence
+#         对于新的方法，感觉在重点不在编程上，在数学上。举个例子：decision_scores=[5,3,2],然后减去当中的最大值→[[0, -2, -3]（以免指数爆炸）
+#         exp为指数运算，计算结果为[1.0, 0.135, 0.050]，经过这样的计算，全部转化为正数，并且放大了之间的差异。这是L80做的事情。
+#         然后将指数值除总和，得到了概率分布，例如：1.0 + 0.135 + 0.050 = 1.185 → 概率为 [0.844, 0.114, 0.042]，再取最大的转为百分比，
+#         这种计算方式被称作softmax
+
 
 
 if __name__ == "__main__":

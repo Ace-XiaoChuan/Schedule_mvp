@@ -1,5 +1,6 @@
 import sqlite3
 from datetime import datetime
+from core.exceptions import DatabaseError
 
 
 class TaskRepository:
@@ -80,4 +81,4 @@ class TaskRepository:
             self.conn.commit()
             return cursor.lastrowid
         except (ValueError, sqlite3.Error) as e:
-            raise Exception(f"数据库操作失败：{str(e)}")
+            raise DatabaseError(f"数据库操作失败：{str(e)}")
