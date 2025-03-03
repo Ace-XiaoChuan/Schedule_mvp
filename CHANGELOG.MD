@@ -51,8 +51,8 @@
 
 ![](assets/UML-diagram/UML-dia2/mermaid-diagram-2025-03-01-162441.svg)
 
-
 ![](assets/UML-diagram/UML-dia3/mermaid-diagram-2025-03-01-162623.svg)
+
 ## [1.0.4] - 2025-02-28
 ### Deprecated
 - 还原回了1.0.2，浪费了不少精力，但是实在是理不清方法之间的依赖关系了，之前的UML也白做了
@@ -76,6 +76,11 @@ flowchart
     EX -.->|异常传递| S
     EX -.->|异常传递| R
 ```
+
+## [1.0.5] - 2025-03-03
+### Fixed
+- 原有的转换器TfidfVectorizer默认使用基于正则表达式的分词，无法正确对中文文本分类，引入jieba分词。在d指导的帮助下，实现了一定程度的预测，但是具体的实现过程我还不太明白。
+- 示例：![](assets/example/2025-03-03-15-41-15.png)
 ---
 https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNp9UctOwlAQ_RUyayBSWoEuTOShKzfiypbFlV4esfQ2l1ZFIPFBNJrwMBgXSoxGTVxq4sKEoD9DW_gLL2-IxllMZs49c-ZMbhGSRMEgQkol-8kMooZrKyxrLhb986p9X7EuqtK06rafnIdjp91kbcLl8ayU7HrDqt_Yrap1-Wi9n5QmU42aNK0Wpkbao5w3d9IU6ZnZqhE-iFUpQjSDElXFNDEHD7a6wpJz92HXXuxmtdtpbbAL1F-cyJhjPVecxln385Y57B-1e19XYyrWlP_MNGozxei8maF6TOq9nTrXr3FM97JJPLc9Jk2wIXFN-ttkbPi6LnU730xmE-sknzUILczMgRtymOZQVmHfUxzAMhgZnMMyiKxUEN2VQdbKjIdMg8QLWhJEg5rYDZSY6QyIKaTmWWfqCjJwNIvYfbkpqiNtm5CFHsQiHIDoCwa8vF8ICH6B9_kEjnNDAUTOGwyEQv4QtxQKcMs8zwtlNxwOFXzlH83i5KU
 除了 Added（新增）和 Changed（变更）之外，常见的记录类型还有：

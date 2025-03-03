@@ -5,9 +5,15 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import LinearSVC
 import joblib
 from pathlib import Path
+import jieba
 
 
 # joblib 是一个用于 简化并行计算 和 高效序列化大型数据 的 Python 库。
+# 自定义中文分词器
+def chinese_tokenizer(text):
+    # 这是模块级别的普通函数，所以没有self，也就是全局函数
+    return jieba.lcut(text)
+
 
 class SimpleClassifier:
     def __init__(self):
@@ -28,41 +34,54 @@ class SimpleClassifier:
             # TfidfVectorizer 是 scikit-learn 提供的一个类，用于将文本数据（例如句子、文章）转换为数值特征，
             # 通常是通过 TF-IDF（Term Frequency-Inverse Document Frequency）方法来进行文本向量化。
             # TfidfVectorizer() 会将输入的文本数据转换成数值化的特征矩阵，每个单词的权重由其在文本中的频率和逆文档频率决定。
-            ('tfidf', TfidfVectorizer()),
+            ('tfidf', TfidfVectorizer(
+                tokenizer=chinese_tokenizer,  # 添加自定义分词器
+                token_pattern=None,  # 禁用默认正则分词
+                max_features=5000  # 优化特征维度
+            )),
             # 第二个步骤：分类器。
             # LinearSVC 是 scikit-learn 中的一个分类器，属于支持向量机（SVM）的一种实现。它用于进行线性分类，
             # 通过寻找一个超平面将不同类别的数据进行区分。这个步骤会使用从 TfidfVectorizer 输出的特征（TF-IDF 特征矩阵）来训练一个分类模型。
             # SVM 的核心思想是通过找到一个最佳的超平面（decision hyperplane）来分离不同类别的数据。
             # 它在机器学习中非常流行，尤其是在小样本、特征较高的情境中表现出色。最优超平面的选择标准是使得两类数据点之间的间隔最大化，
             # 每个数据点都要满足它位于正确的类别一侧，即离超平面正确的一侧
-            ('clf', LinearSVC())  # 分类器
+            ('clf', LinearSVC(class_weight='balanced'))  # 分类器
+            # 元组中的第一个元素是该步骤的名称，第二个元素是转换器/估计器
         ])
 
     def train(self):
         data = pd.read_csv(self.data_path)
+        # 新增，打乱数据顺序
+        data=data.sample(frac=1).reset_index(drop=True)
         print(f"成功加载{len(data)}条真实样本数据")
         self.model.fit(data['text'], data['label'])
         joblib.dump(self.model, self.model_path)
 
     def predict(self, text):
-        """返回预测结果，于main里被调用"""
+        """
+        返回预测结果，于main里被调用
+        :param text: text = self.view.title_entry.get()
+        :return: 预测结果及预测准确率
+        """
         # 老忘，这个model跟mvc的那个重名了，但是实际意思是上边构造函数训练好的分类器
-        # 另外关于predict([text])[0]：上文说了Pipeline只返回列表，所以用[0]取数组的第一个预测结果
+        # 另外关于predict([text])[0]：[text]将单个文本字符串包装成列表，因为scikit-learn的predict方法通常期望一个样本集合，即使只有一个样本也需要列表形式。
         pred = self.model.predict([text])[0]
 
         # 决策分数（即样本至超平面的距离）
-        decision_score = self.model.decision_function([text])[0]
+        # decision_score = self.model.decision_function([text])[0]
+        # # 计算置信度百分比（基于决策分数相对值）
+        # max_score = np.max(decision_score)
+        # min_score = np.min(decision_score)
+        # confidence = int(100 * (max_score - min_score) / (max_score if max_score != 0 else 1))
+        # return pred, min(100, max(0, confidence))  # 确保在0-100之间
 
-        # 计算置信度百分比（基于决策分数相对值）
-        max_score = np.max(decision_score)
-        min_score = np.min(decision_score)
-        # 三元表达式，if max_score != 0:
-        #     result = max_score
-        # else:
-        #     result = 1
-        confidence = int(100 * (max_score - min_score) / (max_score if max_score != 0 else 1))
+        # 以上为我的老方法，以下为clause3.7给出的新方法：
+        decision_scores = self.model.decision_function([text])[0]
+        exp_scores = np.exp(decision_scores - np.max(decision_scores))
+        probs = exp_scores / exp_scores.sum()
+        confidence = int(100 * probs.max())
+        return pred, confidence
 
-        return pred, min(100, max(0, confidence))  # 确保在0-100之间
 
 if __name__ == "__main__":
     classifier = SimpleClassifier()
