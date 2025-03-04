@@ -21,7 +21,7 @@ class Container:
         """
     def __init__(self):
         """初始化核心基础设施层组件"""
-        # 初始化数据访问层
+        # 初始化数据访问层，这个在类的构造方法内创建无疑是组合关系
         self.models = TaskModels()  # 数据库模型管理器
         self.task_repository = TaskRepository(self.models.conn)  # 数据仓储实现
 
@@ -53,7 +53,7 @@ class Container:
         if self._classifier is None:
             # 确保单例。同时SimpleClassifier 的实例完全由 Container 管理，外部代码无法直接访问或控制这个实例。
             # 当 Container 实例被销毁时，SimpleClassifier 实例也会随之被垃圾回收，这进一步证明了生命周期的控制关系。
-            self._classifier = SimpleClassifier()  # 创建分类器实例
+            self._classifier = SimpleClassifier()  # 创建分类器实例，不是构造方法内，所以
 
             try:
                 model_file = Path(self._classifier.model_path)

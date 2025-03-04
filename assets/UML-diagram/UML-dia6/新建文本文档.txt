@@ -69,7 +69,7 @@ classDiagram
 
     TaskController --> Container : 组合
     TaskController --> MainView : 组合
-    TaskController --> TaskService : 
+    TaskController --> TaskService : 组合
     Container --> TaskModels : 组合
     Container --> TaskRepository : 组合
     Container --> TaskService : 组合

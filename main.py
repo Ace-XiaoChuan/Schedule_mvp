@@ -7,6 +7,7 @@ from ai.ai_classifier import SimpleClassifier
 from services.task_service import TaskService
 from core.exceptions import ValidationError, AIClassificationError
 from core.container import Container
+from logging.handlers import RotatingFileHandler
 
 
 class TaskController:
