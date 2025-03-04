@@ -60,27 +60,20 @@
 - 转而重构了以下内容,可以看到是重构了，但是只重构了一点点，下一次更新应该关注于控制器，控制器已经有点尾大不掉了
 ![](assets/UML-diagram/UML-dia4/mermaid-diagram-2025-03-02-135357.svg)
 ![](assets/UML-diagram/UML-dia5/mermaid-diagram-2025-03-02-140722.svg)
-```mermaid
-flowchart
-%% 数据流向
-    V -->|用户输入| C
-    C -->|调用业务逻辑| S
-    C -->|分类请求| AI
-    S -->|数据持久化| R
-    R -->|执行SQL| M
-    M -->|读写数据| DB
-    CT -->|依赖注入| M
-    CT -->|依赖注入| R
-    CT -->|依赖注入| S
-    CT -->|依赖注入| AI
-    EX -.->|异常传递| S
-    EX -.->|异常传递| R
-```
+
 
 ## [1.0.5] - 2025-03-03
 ### Fixed
 - 原有的转换器TfidfVectorizer默认使用基于正则表达式的分词，无法正确对中文文本分类，引入jieba分词。在d指导的帮助下，实现了一定程度的预测，但是具体的实现过程我还不太明白。
 - 示例：![](assets/example/2025-03-03-15-41-15.png)
+### Added
+- 添加了懒加载和依赖注入部分的注释，我对这些方面的了解还是不够。
+- 添加了类图，这个画的好。让我想起了学习软件工程这段时间关于组合的知识，组合就是依赖注入。
+![](assets/UML-diagram/UML-dia6/mermaid-diagram-2025-03-03-215559.svg)
+![](2025-03-04-13-11-27.png)
+
+
+
 ---
 https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNp9UctOwlAQ_RUyayBSWoEuTOShKzfiypbFlV4esfQ2l1ZFIPFBNJrwMBgXSoxGTVxq4sKEoD9DW_gLL2-IxllMZs49c-ZMbhGSRMEgQkol-8kMooZrKyxrLhb986p9X7EuqtK06rafnIdjp91kbcLl8ayU7HrDqt_Yrap1-Wi9n5QmU42aNK0Wpkbao5w3d9IU6ZnZqhE-iFUpQjSDElXFNDEHD7a6wpJz92HXXuxmtdtpbbAL1F-cyJhjPVecxln385Y57B-1e19XYyrWlP_MNGozxei8maF6TOq9nTrXr3FM97JJPLc9Jk2wIXFN-ttkbPi6LnU730xmE-sknzUILczMgRtymOZQVmHfUxzAMhgZnMMyiKxUEN2VQdbKjIdMg8QLWhJEg5rYDZSY6QyIKaTmWWfqCjJwNIvYfbkpqiNtm5CFHsQiHIDoCwa8vF8ICH6B9_kEjnNDAUTOGwyEQv4QtxQKcMs8zwtlNxwOFXzlH83i5KU
 除了 Added（新增）和 Changed（变更）之外，常见的记录类型还有：
@@ -96,3 +89,5 @@ Fixed（修复）
 
 Security（安全）
 表示修复了安全漏洞或对安全相关的改进。
+
+[def]: as

@@ -1,0 +1,82 @@
+classDiagram
+    class TaskController {
+        +container: Container
+        +view: MainView
+        +model: TaskModels
+        +classifier: SimpleClassifier
+        +task_service: TaskService
+        +handle_manual_task()
+        +start_auto_task()
+        +stop_auto_task()
+        +auto_classify()
+    }
+
+    class MainView {
+        +window: Tk
+        +title_entry: Entry
+        +category_combo: Combobox
+        +task_list: Treeview
+        +set_manual_task_handler()
+        +refresh_task_list()
+        +show_error()
+    }
+
+    class Container {
+        -_classifier: SimpleClassifier
+        +models: TaskModels
+        +task_repository: TaskRepository
+        +task_service: TaskService
+        +classifier() 属性
+    }
+
+    class TaskModels {
+        +conn: sqlite3.Connection
+        +repository: TaskRepository
+        +add_task()
+        +get_all_tasks()
+        +close()
+    }
+
+    class TaskRepository {
+        +conn: sqlite3.Connection
+        +add_task()
+        +_create_table()
+    }
+
+    class TaskService {
+        +repository: TaskRepository
+        +classifier: SimpleClassifier
+        +create_task()
+    }
+
+    class SimpleClassifier {
+        +model: Pipeline
+        +train()
+        +predict()
+    }
+
+    class DomainError {
+        <<Exception>>
+    }
+
+    class ValidationError {
+        <<Exception>>
+    }
+
+    class DatabaseError {
+        <<Exception>>
+    }
+
+    TaskController --> Container : 组合
+    TaskController --> MainView : 组合
+    TaskController --> TaskService : 
+    Container --> TaskModels : 组合
+    Container --> TaskRepository : 组合
+    Container --> TaskService : 组合
+    Container --> SimpleClassifier : 延迟初始化
+    TaskModels --> TaskRepository : 提供连接
+    TaskService --> TaskRepository : 依赖
+    TaskService --> SimpleClassifier : 依赖
+    TaskRepository ..> DatabaseError : 抛出
+    TaskService ..> ValidationError : 抛出
+    SimpleClassifier ..> DomainError : 抛出

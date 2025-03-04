@@ -12,6 +12,7 @@ from core.container import Container
 class TaskController:
     def __init__(self):
         print("初始化控制器...")
+        # 组合关系
         self.container = Container()
         self.view = MainView()
         self.model = self.container.models

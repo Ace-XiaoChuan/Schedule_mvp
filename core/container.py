@@ -32,7 +32,7 @@ class Container:
         # 注意：此处注入的是 classifier 的 property，实际使用时才会初始化
         self.task_service = TaskService(
             repository=self.task_repository,  # 注入数据仓储
-            classifier=self.classifier  # 注入分类器（惰性加载）
+            classifier=self.classifier  # 注入属性而非实例
         )
 
     @property
@@ -51,6 +51,8 @@ class Container:
           3. 存在则直接加载已有模型
         """
         if self._classifier is None:
+            # 确保单例。同时SimpleClassifier 的实例完全由 Container 管理，外部代码无法直接访问或控制这个实例。
+            # 当 Container 实例被销毁时，SimpleClassifier 实例也会随之被垃圾回收，这进一步证明了生命周期的控制关系。
             self._classifier = SimpleClassifier()  # 创建分类器实例
 
             try:
