@@ -69,12 +69,12 @@ classDiagram
 
     TaskController --> Container : 组合
     TaskController --> MainView : 组合
-    TaskController --> TaskService : 组合
+    TaskController --> TaskService : 依赖
     Container --> TaskModels : 组合
     Container --> TaskRepository : 组合
     Container --> TaskService : 组合
-    Container --> SimpleClassifier : 延迟初始化
-    TaskModels --> TaskRepository : 提供连接
+    Container --> SimpleClassifier : 延迟初始化，但不改变组合关系
+    TaskModels --> TaskRepository : 提供连接、组合
     TaskService --> TaskRepository : 依赖
     TaskService --> SimpleClassifier : 依赖
     TaskRepository ..> DatabaseError : 抛出

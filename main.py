@@ -16,6 +16,7 @@ class TaskController:
         # 组合关系
         self.container = Container()
         self.view = MainView()
+        # 依赖，就获取了一个引用
         self.model = self.container.models
 
         print("初始化分类器...")
