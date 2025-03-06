@@ -3,10 +3,9 @@ import tkinter as tk
 import tkinter.messagebox as messagebox
 from models import TaskModels
 from view import MainView
-from ai.ai_classifier import SimpleClassifier
-from services.task_service import TaskService
-from core.exceptions import ValidationError, AIClassificationError
-from core.container import Container
+from ai import SimpleClassifier
+from services import TaskService
+from core import ValidationError, AIClassificationError, Container
 from logging.handlers import RotatingFileHandler
 
 
@@ -16,7 +15,6 @@ class TaskController:
         # 组合关系
         self.container = Container()
         self.view = MainView()
-        # 依赖，就获取了一个引用
         self.model = self.container.models
 
         print("初始化分类器...")
