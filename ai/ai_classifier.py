@@ -6,6 +6,7 @@ from sklearn.svm import LinearSVC
 import joblib
 from pathlib import Path
 import jieba
+from sklearn.ensemble import RandomForestClassifier
 
 
 # joblib 是一个用于 简化并行计算 和 高效序列化大型数据 的 Python 库。
@@ -30,9 +31,6 @@ class SimpleClassifier:
         # Pipeline接受一个包含多个步骤的列表，每个步骤都是一个
         # 二元组（name, operation）
         self.model = Pipeline([
-            # 第一个步骤：文本转数值（特征提取）
-            # TfidfVectorizer 是 scikit-learn 提供的一个类，用于将文本数据（例如句子、文章）转换为数值特征，
-            # 通常是通过 TF-IDF（Term Frequency-Inverse Document Frequency）方法来进行文本向量化。
             # TfidfVectorizer() 会将输入的文本数据转换成数值化的特征矩阵，每个单词的权重由其在文本中的频率和逆文档频率决定。
             ('tfidf', TfidfVectorizer(
                 tokenizer=chinese_tokenizer,  # 添加自定义分词器
@@ -46,7 +44,11 @@ class SimpleClassifier:
             # SVM 的核心思想是通过找到一个最佳的超平面（decision hyperplane）来分离不同类别的数据。
             # 它在机器学习中非常流行，尤其是在小样本、特征较高的情境中表现出色。最优超平面的选择标准是使得两类数据点之间的间隔最大化，
             # 每个数据点都要满足它位于正确的类别一侧，即离超平面正确的一侧
-            ('clf', LinearSVC(class_weight='balanced'))  # 分类器
+            ('clf', RandomForestClassifier(
+                n_estimators=100,  # 树的数量
+                class_weight='balanced',
+                random_state=42  # 确保结果可复现
+            ))  # 分类器
             # 元组中的第一个元素是该步骤的名称，第二个元素是转换器/估计器
         ])
 
@@ -68,6 +70,7 @@ class SimpleClassifier:
         # 另外关于predict([text])[0]：[text]将单个文本字符串包装成列表，因为scikit-learn的predict方法通常期望一个样本集合，即使只有一个样本也需要列表形式。
         pred = self.model.predict([text])[0]
 
+        # 我的方法：
         # 决策分数（即样本至超平面的距离）
         # decision_score = self.model.decision_function([text])[0]
         # # 计算置信度百分比（基于决策分数相对值）
@@ -76,11 +79,16 @@ class SimpleClassifier:
         # confidence = int(100 * (max_score - min_score) / (max_score if max_score != 0 else 1))
         # return pred, min(100, max(0, confidence))  # 确保在0-100之间
 
-        # 以上为我的老方法，以下为clause3.7给出的新方法：
-        decision_scores = self.model.decision_function([text])[0]
-        exp_scores = np.exp(decision_scores - np.max(decision_scores))
-        probs = exp_scores / exp_scores.sum()
-        confidence = int(100 * probs.max())
+        # 新方法：
+        # decision_scores = self.model.decision_function([text])[0]
+        # exp_scores = np.exp(decision_scores - np.max(decision_scores))
+        # probs = exp_scores / exp_scores.sum()
+        # confidence = int(100 * probs.max())
+        # return pred, confidence
+
+        # 随机森林内置的概率估计方法：
+        probs=self.model.predict_proba([text])[0]
+        confidence = int(100 * probs())
         return pred, confidence
 
 
