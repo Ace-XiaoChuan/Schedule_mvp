@@ -69,7 +69,7 @@
 ### Added
 - 添加了懒加载和依赖注入部分的注释，我对这些方面的了解还是不够。
 - 添加了类图，这个画的好。让我想起了学习软件工程这段时间关于组合的知识
-![](assets/UML-diagram/UML-dia6/mermaid-diagram-2025-03-05-090949.svg)
+![](assets/UML-diagram/UML-dia6/mermaid-diagram-2025-03-06-160847.svg)
 
 ## [1.0.6] - 2025-03-04
 ### Fixed
