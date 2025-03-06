@@ -87,8 +87,8 @@ class SimpleClassifier:
         # return pred, confidence
 
         # 随机森林内置的概率估计方法：
-        probs=self.model.predict_proba([text])[0]
-        confidence = int(100 * probs())
+        probs = self.model.predict_proba([text])[0]
+        confidence = int(100 * np.max(probs))
         return pred, confidence
 
 
