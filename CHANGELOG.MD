@@ -69,7 +69,7 @@
 ### Added
 - 添加了懒加载和依赖注入部分的注释，我对这些方面的了解还是不够。
 - 添加了类图，这个画的好。让我想起了学习软件工程这段时间关于组合的知识
-![](assets/UML-diagram/UML-dia6/mermaid-diagram-2025-03-06-160847.svg)
+![](assets/UML-diagram/UML-dia6/mermaid-diagram-2025-03-07-144439.svg)
 
 ## [1.0.6] - 2025-03-04
 ### Fixed
@@ -80,6 +80,28 @@
 - 将分类算法从LinearSVC升级为RandomForest，提高了分类准确率
 - 优化了置信度计算方法，现使用RandomForest原生概率输出
 - 更新了依赖库，添加了sklearn.ensemble
+
+## [1.1.1] - 2025-03-07
+### Deprecated
+- 回退到了上个版本，模块之间出现了循环依赖如下。
+```
+models.py → task_repository.py → core/__init__.py → core/container.py → models.py
+```
+- 目前的解决方式是手动调整，我希望最终能够做到完全的层次架构如下，但是这些更新要等到以后来做。我坚信对于中小型项目来说，与其遵循严格的分层架构，还是保障清晰的依赖关系比较重要。架构只是解决问题的方式不是引入问题的方式。
+```
+schedule_mvp/
+├─ models/              # 业务实体和数据模型
+│  ├─ task.py           # 纯数据实体
+├─ repositories/        # 数据访问层
+│  ├─ task_repository.py
+├─ services/            # 业务逻辑层
+│  ├─ task_service.py
+├─ views/               # 表现层
+├─ utils/               # 通用工具
+│  ├─ ai_classifier.py
+│  ├─ exceptions.py
+├─ main.py              # 程序入口和依赖配置
+```
 
 ---
 https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNp9UctOwlAQ_RUyayBSWoEuTOShKzfiypbFlV4esfQ2l1ZFIPFBNJrwMBgXSoxGTVxq4sKEoD9DW_gLL2-IxllMZs49c-ZMbhGSRMEgQkol-8kMooZrKyxrLhb986p9X7EuqtK06rafnIdjp91kbcLl8ayU7HrDqt_Yrap1-Wi9n5QmU42aNK0Wpkbao5w3d9IU6ZnZqhE-iFUpQjSDElXFNDEHD7a6wpJz92HXXuxmtdtpbbAL1F-cyJhjPVecxln385Y57B-1e19XYyrWlP_MNGozxei8maF6TOq9nTrXr3FM97JJPLc9Jk2wIXFN-ttkbPi6LnU730xmE-sknzUILczMgRtymOZQVmHfUxzAMhgZnMMyiKxUEN2VQdbKjIdMg8QLWhJEg5rYDZSY6QyIKaTmWWfqCjJwNIvYfbkpqiNtm5CFHsQiHIDoCwa8vF8ICH6B9_kEjnNDAUTOGwyEQv4QtxQKcMs8zwtlNxwOFXzlH83i5KU
