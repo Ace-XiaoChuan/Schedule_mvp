@@ -3,9 +3,9 @@ import tkinter as tk
 import tkinter.messagebox as messagebox
 from models import TaskModels
 from view import MainView
-from ai import SimpleClassifier
-from services import TaskService
-from core import ValidationError, AIClassificationError, Container
+from ai.ai_classifier import SimpleClassifier  # 直接从模块导入
+from core import ValidationError, AIClassificationError  # 只导入异常
+from core.container import Container  # 单独导入容器
 from logging.handlers import RotatingFileHandler
 
 

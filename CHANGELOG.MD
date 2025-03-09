@@ -69,7 +69,7 @@
 ### Added
 - 添加了懒加载和依赖注入部分的注释，我对这些方面的了解还是不够。
 - 添加了类图，这个画的好。让我想起了学习软件工程这段时间关于组合的知识
-![](assets/UML-diagram/UML-dia6/mermaid-diagram-2025-03-07-144439.svg)
+![](assets/UML-diagram/UML-dia6/mermaid-diagram-2025-03-05-090949.svg)
 
 ## [1.0.6] - 2025-03-04
 ### Fixed
@@ -85,7 +85,7 @@
 ### Deprecated
 - 回退到了上个版本，模块之间出现了循环依赖如下。
 ```
-models.py → task_repository.py → core/__init__.py → core/container.py → models.py
+task_repository → core.exceptions → core.container → task_repository//核心层依赖到仓储层了
 ```
 - 目前的解决方式是手动调整，我希望最终能够做到完全的层次架构如下，但是这些更新要等到以后来做。我坚信对于中小型项目来说，与其遵循严格的分层架构，还是保障清晰的依赖关系比较重要。架构只是解决问题的方式不是引入问题的方式。
 ```
@@ -102,6 +102,16 @@ schedule_mvp/
 │  ├─ exceptions.py
 ├─ main.py              # 程序入口和依赖配置
 ```
+一般的层次：表示层 → 控制器层 → 服务层 → 仓储层 → 模型层 → 数据层 → 核心层（依赖倒置原则）
+分离关注点：
+构造方法关注对象的基本结构
+属性方法关注特定属性的访问逻辑
+保持接口稳定：
+外部代码使用container.task_repository，不需要知道它是属性还是方法
+可以在不改变接口的情况下修改内部实现
+优化资源使用：
+只有真正需要时才创建资源密集型对象
+避免创建可能永远不会使用的对象
 
 ---
 https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNp9UctOwlAQ_RUyayBSWoEuTOShKzfiypbFlV4esfQ2l1ZFIPFBNJrwMBgXSoxGTVxq4sKEoD9DW_gLL2-IxllMZs49c-ZMbhGSRMEgQkol-8kMooZrKyxrLhb986p9X7EuqtK06rafnIdjp91kbcLl8ayU7HrDqt_Yrap1-Wi9n5QmU42aNK0Wpkbao5w3d9IU6ZnZqhE-iFUpQjSDElXFNDEHD7a6wpJz92HXXuxmtdtpbbAL1F-cyJhjPVecxln385Y57B-1e19XYyrWlP_MNGozxei8maF6TOq9nTrXr3FM97JJPLc9Jk2wIXFN-ttkbPi6LnU730xmE-sknzUILczMgRtymOZQVmHfUxzAMhgZnMMyiKxUEN2VQdbKjIdMg8QLWhJEg5rYDZSY6QyIKaTmWWfqCjJwNIvYfbkpqiNtm5CFHsQiHIDoCwa8vF8ICH6B9_kEjnNDAUTOGwyEQv4QtxQKcMs8zwtlNxwOFXzlH83i5KU

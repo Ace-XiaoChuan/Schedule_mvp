@@ -1,6 +1,4 @@
 from pathlib import Path
-from repositories.task_repository import TaskRepository
-from services.task_service import TaskService
 from ai.ai_classifier import SimpleClassifier
 from models import TaskModels
 
@@ -21,20 +19,42 @@ class Container:
         """
 
     def __init__(self):
+
         """初始化核心基础设施层组件"""
         # 初始化数据访问层，这个在类的构造方法内创建无疑是组合关系
         self.models = TaskModels()  # 数据库模型管理器
-        self.task_repository = TaskRepository(self.models.conn)  # 数据仓储实现
 
-        # 延迟初始化分类器（设计关键点）
-        self._classifier = None  # 实际分类器实例的占位符
+        # 延迟初始化，据信在Python中构造方法中声明所有属性是一种良好实践，以后都要这么做
+        # 同时初始化为空值暗示没有完成初始化。
+        # 声明(Declaration)：创建变量名
+        # 分配(Assignment)：给变量赋值
+        # 初始化(Initialization)：首次给变量赋予有意义的值
+        # 实例化(Instantiation)：创建类的实例对象
+        # 所以这里只是声明并且分配，但是没有初始化和实例化，其实没什么意义
+        self._task_repository = None
+        self._classifier = None
+        self._task_service = None
 
-        # 初始化服务层（依赖注入经典案例）
-        # 注意：此处注入的是 classifier 的 property，实际使用时才会初始化
-        self.task_service = TaskService(
-            repository=self.task_repository,  # 注入数据仓储
-            classifier=self.classifier  # 注入属性而非实例
-        )
+    @property
+    def task_repository(self):
+        # 使用构造器在这里的意义：
+        if self._task_repository is None:
+            # 在这里导入，避免循环依赖，也可以说是懒加载
+            from repositories.task_repository import TaskRepository
+            self._task_repository = TaskRepository(self.models.conn)
+        return self._task_repository
+
+    @property
+    def task_service(self):
+        if self._task_service is None:
+            # 在这里导入，避免循环依赖
+            from services.task_service import TaskService
+            self._task_service = TaskService(
+                # 高明的地方。外部代码直接使用container.task_Repository,不需要知道是属性还是方法。
+                repository=self.task_repository,
+                classifier=self.classifier
+            )
+        return self._task_service
 
     @property
     def classifier(self):
@@ -54,6 +74,7 @@ class Container:
         if self._classifier is None:
             # 确保单例。同时SimpleClassifier 的实例完全由 Container 管理，外部代码无法直接访问或控制这个实例。
             # 当 Container 实例被销毁时，SimpleClassifier 实例也会随之被垃圾回收，这进一步证明了生命周期的控制关系。
+            from ai.ai_classifier import SimpleClassifier
             self._classifier = SimpleClassifier()  # 创建分类器实例，不是构造方法内，但是懒加载只是延迟了对象创建的时间点，
             # 但不改变两个类之间的基本关系。当 classifier 属性第一次被访问时，SimpleClassifier 实例被创建并存储在 self._classifier 中，
             # 之后 Container 会一直持有这个引用。
@@ -69,5 +90,3 @@ class Container:
             except Exception as e:
                 # 统一异常转换（核心错误处理策略）
                 raise RuntimeError(f"分类器初始化失败：{str(e)}") from e
-
-        return self._classifier
