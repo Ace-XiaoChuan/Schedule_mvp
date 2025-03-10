@@ -1,6 +1,9 @@
 import sqlite3
 from datetime import datetime
 from core.exceptions import DatabaseError
+from core import config
+# from ..core会报错，直接运行脚本main.py,主模块将会不被视为任何包的一部分，即使它处于目录当中。当前模块儿的__package__会为空。所以不能够使用间接路径导入
+# 而使用绝对路径导入工作机制完全不一样。Python会在sys.path列表中的所有路径下查找要导入的模块，core显然在这里面。Claude也建议我使用绝对导入。
 
 
 class TaskRepository:
@@ -59,9 +62,9 @@ class TaskRepository:
         """
         try:
             # 先验证时间格式
-            datetime.strptime(task_data["start_time"], "%Y-%m-%d %H:%M:%S")
+            datetime.strptime(task_data["start_time"], config.datetime_formation)
             if task_data["end_time"]:
-                datetime.strptime(task_data["end_time"], "%Y-%m-%d %H:%M:%S")
+                datetime.strptime(task_data["end_time"], config.datetime_formation)
             # cursor：游标对象，承载SQL执行后的结果并提供一些附加信息（如那个lastrowid）
             # 1.cursor是执行结果的的封装
             # 2.获取附加信息：对于 INSERT 操作，游标对象的 lastrowid 属性可以返回最后一次插入记录时自动生成的主键值。这在需要知道新插入记录的 ID 时非常有用。

@@ -16,3 +16,9 @@ class Appconfig:
         # 模型参数
         self.MAX_FEATURES = int(self.config['MODEL']['max_features'])  # 5000/100先这么多
         self.N_ESTIMATORS = int(self.config['MODEL']['n_estimators'])
+
+
+datetime_formation: str = "%Y-%m-%d %H:%M:%S"  # 定义为类属性，省的实例化了
+
+config = Appconfig()  # 关于为什么要实例化一个config：虽然类的属性可以通过类名访问Appconfig,datetime_formation，但是这样会导入一整个类，不够优雅
+# 而且这有单例模式的味道，配置只需要一份就好
