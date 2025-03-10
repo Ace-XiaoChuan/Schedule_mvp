@@ -1,7 +1,7 @@
 import tkinter as tk
 from datetime import datetime
 from tkinter import ttk, messagebox
-
+from core import config
 
 class MainView:
     def __init__(self):
@@ -211,7 +211,7 @@ class MainView:
 
     def _fill_current_time(self):
         """此方法用于在_build_task_form()方法中自动填充当前时间于开始时间框"""
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = datetime.now().strftime(config.datetime_formation)
         self.start_entry.delete(0, tk.END)
         self.start_entry.insert(0, current_time)
 

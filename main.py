@@ -1,7 +1,7 @@
 from datetime import datetime
 import tkinter as tk
 import tkinter.messagebox as messagebox
-from models import TaskModels
+from core import config
 from view import MainView
 from ai.ai_classifier import SimpleClassifier  # 直接从模块导入
 from core import ValidationError, AIClassificationError  # 只导入异常
@@ -75,7 +75,7 @@ class TaskController:
         self.current_auto_task = {
             "title": "自动记录任务",
             "category": self.view.auto_category.get(),
-            "start_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "start_time": datetime.now().strftime(config.datetime_formation)
         }
         self.view.timer_status.config(text="计时中...", foreground="#2196F3")
         self.view.set_auto_controls_state(tk.DISABLED, tk.NORMAL)
@@ -87,7 +87,7 @@ class TaskController:
             return
 
         # 如果当前有自动计时任务：
-        end_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        end_time = datetime.now().strftime(config.datetime_formation)
         try:
             # 把任务加入列表
             self.task_service.create_task({

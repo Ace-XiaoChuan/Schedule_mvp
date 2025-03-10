@@ -6,6 +6,7 @@ tasks_service
 """
 from core.exceptions import ValidationError
 from datetime import datetime
+from core import config
 
 
 class TaskService:
@@ -29,9 +30,9 @@ class TaskService:
         if task_data.get("is_auto") == 1 and not task_data.get("end_time"):
             raise ValidationError("自动任务必须设置结束时间！")
         # 时间顺序验证（大小不能倒置）
-        start_time = datetime.strptime(task_data["start_time"], "%Y-%m-%d %H:%M:%S")
+        start_time = datetime.strptime(task_data["start_time"], config.datetime_formation)
         if task_data.get("end_time"):
-            end_time = datetime.strptime(task_data["end_time"], "%Y-%m-%d %H:%M:%S")
+            end_time = datetime.strptime(task_data["end_time"], config.datetime_formation)
             if end_time < start_time:
                 raise ValidationError("结束时间不能早于开始时间")
         return self.repository.add_task(task_data)

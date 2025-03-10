@@ -32,6 +32,7 @@ class SimpleClassifier:
         self.model = Pipeline([
             # TfidfVectorizer() 会将输入的文本数据转换成数值化的特征矩阵，每个单词的权重由其在文本中的频率和逆文档频率决定。
             ('tfidf', TfidfVectorizer(
+                ngram_range=(1, 2),
                 tokenizer=chinese_tokenizer,  # 添加自定义分词器
                 token_pattern=None,  # 禁用默认正则分词
                 max_features=5000,  # 优化特征维度
