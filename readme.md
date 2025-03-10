@@ -33,7 +33,7 @@
 
 ```bash
 # 克隆仓库
-git clone [仓库地址]
+git clone https://github.com/Ace-XiaoChuan/Schedule_mvp
 
 # 安装依赖
 pip install -r requirements.txt
@@ -53,9 +53,9 @@ python main.py
 ```
 schedule_mvp/
 ├─ main
-├─ database
 ├─ models
 ├─ view
+├─ assets/...
 ├─ ai/
 │  ├─ ai_classifier
 │  ├─ tasks.csv
@@ -63,11 +63,14 @@ schedule_mvp/
 ├─ core/
 │  ├─ container.py
 │  ├─ expections.py
+│  ├─ config.py
+│  ├─ logger.py
 ├─ repository/
 │  ├─ task_repository.py
 ├─ services/
 │  ├─ task_service.py
-├─ readme.md
+├─ README.md
+├─ CHANGELOG.md
 ```
 
 ## 开发文档
