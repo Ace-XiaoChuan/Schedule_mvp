@@ -81,4 +81,7 @@ class TaskRepository:
             self.conn.commit()
             return cursor.lastrowid
         except (ValueError, sqlite3.Error) as e:
-            raise DatabaseError(f"数据库操作失败：{str(e)}")
+            raise DatabaseError(
+                f"数据库操作失败：{str(e)}",
+                #     未来可能的错题报告...
+            )

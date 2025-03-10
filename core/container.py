@@ -1,6 +1,7 @@
 from pathlib import Path
 from ai.ai_classifier import SimpleClassifier
 from models import TaskModels
+from .config import Appconfig
 
 
 class Container:
@@ -20,9 +21,9 @@ class Container:
 
     def __init__(self):
 
-        """初始化核心基础设施层组件"""
-        # 初始化数据访问层，这个在类的构造方法内创建无疑是组合关系
-        self.models = TaskModels()  # 数据库模型管理器
+        """组合关系初始化核心基础设施层组件"""
+        self.config = Appconfig()
+        self.models = TaskModels(str(self.config.DB_PATH))  # 数据库模型管理器
 
         # 延迟初始化，据信在Python中构造方法中声明所有属性是一种良好实践，以后都要这么做
         # 同时初始化为空值暗示没有完成初始化。
@@ -60,22 +61,17 @@ class Container:
     def classifier(self):
         """
         分类器属性的惰性加载实现
-
-        设计意义：
-          1. 资源优化：避免应用启动时立即加载大模型
-          2. 容错处理：将模型训练/加载的潜在错误延迟到实际使用时
-          3. 状态管理：确保全局只有一个分类器实例（单例模式）
-
-        初始化逻辑：
           1. 首次访问时检查模型文件是否存在
           2. 不存在则触发训练并保存模型
           3. 存在则直接加载已有模型
         """
         if self._classifier is None:
             # 确保单例。同时SimpleClassifier 的实例完全由 Container 管理，外部代码无法直接访问或控制这个实例。
-            # 当 Container 实例被销毁时，SimpleClassifier 实例也会随之被垃圾回收，这进一步证明了生命周期的控制关系。
             from ai.ai_classifier import SimpleClassifier
-            self._classifier = SimpleClassifier()  # 创建分类器实例，不是构造方法内，但是懒加载只是延迟了对象创建的时间点，
+            self._classifier = SimpleClassifier(
+                max_features=self.config.MAX_FEATURES,
+                n_estimators=self.config.N_ESTIMATORS
+            )  # 创建分类器实例，不是构造方法内，但是懒加载只是延迟了对象创建的时间点，
             # 但不改变两个类之间的基本关系。当 classifier 属性第一次被访问时，SimpleClassifier 实例被创建并存储在 self._classifier 中，
             # 之后 Container 会一直持有这个引用。
 

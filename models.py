@@ -4,7 +4,7 @@ from repositories.task_repository import TaskRepository
 
 
 class TaskModels:
-    def __init__(self, db_path="schedule.db"):
+    def __init__(self, db_path: str):
         self.conn = sqlite3.connect(db_path)
         self.repository = TaskRepository(self.conn)
 

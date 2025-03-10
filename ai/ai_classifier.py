@@ -16,7 +16,7 @@ def chinese_tokenizer(text):
 
 
 class SimpleClassifier:
-    def __init__(self):
+    def __init__(self,max_features=5000, n_estimators=100):
         self.script_dir = Path(__file__).parent
         self.data_path = self.script_dir / "tasks.csv"
         self.model_path = self.script_dir / "simple_model.pkl"
