@@ -110,3 +110,5 @@ pandas
 joblib
 jieba
 scikit-learn
+matplotlib
+seaborn

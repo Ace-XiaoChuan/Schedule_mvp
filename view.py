@@ -3,6 +3,7 @@ from datetime import datetime
 from tkinter import ttk, messagebox
 from core import config
 
+
 class MainView:
     def __init__(self):
         self.window = tk.Tk()
@@ -17,8 +18,29 @@ class MainView:
         label = tk.Label(self.window, text="欢迎使用日程管理系统！")
         label.pack(pady=10)
 
-        self._build_task_form()  # 加载上面那个表单
-        self._build_task_list()  # 加载下面任务列表
+        self._build_task_form()  # 加载基础任务表单（T1）
+        self._build_task_list()  # 加载任务列表（T2）
+
+        # 初始化混淆矩阵分析框架
+        analysis_frame = tk.Frame(self.window)
+        analysis_frame.pack(pady=10)
+
+        # 添加混淆矩阵按钮
+        self.cm_btn = tk.Button(
+            analysis_frame,
+            text="显示混淆矩阵",
+            command=self.show_confusion_matrix
+        )
+        self.cm_btn.pack(side=tk.LEFT, padx=5)
+
+        # 显示混淆矩阵结果
+    def show_confusion_matrix(self):
+        try:
+            from ai.ai_classifier import SimpleClassifier
+            classifier = SimpleClassifier()
+            classifier.evaluate()
+        except Exception as e:
+            messagebox.showerror("错误", f"生成混淆矩阵失败: {str(e)}")
 
     def _build_task_form(self):
         # 创建表单框架
@@ -200,7 +222,7 @@ class MainView:
             foreground="#4CAF50" if confidence > 60 else "#FF5722"
         )
 
-    def show_error(self, message:str,error_type:str="error"):
+    def show_error(self, message: str, error_type: str = "error"):
         """
         错误提示方法,
         :param message: 错误信息

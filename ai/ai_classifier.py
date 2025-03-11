@@ -6,6 +6,10 @@ import joblib
 from pathlib import Path
 import jieba
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 # joblib 是一个用于 简化并行计算 和 高效序列化大型数据 的 Python 库。
@@ -16,7 +20,7 @@ def chinese_tokenizer(text):
 
 
 class SimpleClassifier:
-    def __init__(self,max_features=5000, n_estimators=100):
+    def __init__(self, max_features=5000, n_estimators=100):
         self.script_dir = Path(__file__).parent
         self.data_path = self.script_dir / "tasks.csv"
         self.model_path = self.script_dir / "simple_model.pkl"
@@ -83,11 +87,50 @@ class SimpleClassifier:
         confidence = int(100 * np.max(probs))
         return pred, confidence
 
+    #         对于新的方法，感觉在重点不在编程上，在数学上。举个例子：decision_scores=[5,3,2],然后减去当中的最大值→[[0, -2, -3]（以免指数爆炸）
+    #         exp为指数运算，计算结果为[1.0, 0.135, 0.050]，经过这样的计算，全部转化为正数，并且放大了之间的差异。这是L80做的事情。
+    #         然后将指数值除总和，得到了概率分布，例如：1.0 + 0.135 + 0.050 = 1.185 → 概率为 [0.844, 0.114, 0.042]，再取最大的转为百分比，
+    #         这种计算方式被称作softmax
+    def evaluate(self):
+        """
+        生成、显示混淆矩阵
+        """
+        # 先加载数据
+        data = pd.read_csv(self.data_path)
 
-#         对于新的方法，感觉在重点不在编程上，在数学上。举个例子：decision_scores=[5,3,2],然后减去当中的最大值→[[0, -2, -3]（以免指数爆炸）
-#         exp为指数运算，计算结果为[1.0, 0.135, 0.050]，经过这样的计算，全部转化为正数，并且放大了之间的差异。这是L80做的事情。
-#         然后将指数值除总和，得到了概率分布，例如：1.0 + 0.135 + 0.050 = 1.185 → 概率为 [0.844, 0.114, 0.042]，再取最大的转为百分比，
-#         这种计算方式被称作softmax
+        # 划分训练测试集
+        X_train, X_test, y_train, y_test = train_test_split(
+            data['text'], data['label'],
+            test_size=0.2,
+            random_state=42
+        )
+
+        # - 如果已有模型：加载
+        # - 如果没有模型：训练
+        if Path(self.model_path).exists():
+            self.model = joblib.load(self.model_path)  # 加载已保存的模型
+        else:
+            self.model.fit(X_train, y_train)  # 训练新模型
+            joblib.dump(self.model, self.model_path)  # 保存模型
+
+        # 预测测试集
+        y_pred = self.model.predict(X_test)
+
+        # 生成混淆矩阵
+        cm = confusion_matrix(y_test, y_pred)
+
+        # 可视化
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(cm,
+                    annot=True,
+                    fmt='d',
+                    cmap='Blues',
+                    xticklabels=['工作', '休闲', '睡眠'],
+                    yticklabels=['工作', '休闲', '睡眠'])
+        plt.title('Confusion Matrix')
+        plt.ylabel('True Label')
+        plt.xlabel('Predicted Label')
+        plt.show()
 
 
 if __name__ == "__main__":
