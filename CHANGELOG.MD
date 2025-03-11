@@ -205,6 +205,122 @@ classDiagram
     SimpleClassifier ..> DomainError : 抛出
 
 ```
+```mermaid
+classDiagram
+    class TaskController {
+        +container: Container
+        +view: MainView
+        +model: TaskModels
+        +classifier: SimpleClassifier
+        +task_service: TaskService
+        +handle_manual_task()
+        +start_auto_task()
+        +stop_auto_task()
+        +auto_classify()
+    }
+
+    class MainView {
+        +window: Tk
+        +title_entry: Entry
+        +category_combo: Combobox
+        +task_list: Treeview
+        +set_manual_task_handler()
+        +refresh_task_list()
+        +show_confidence() 
+        +set_auto_controls_state() 
+    }
+
+    class Container {
+        -_classifier: SimpleClassifier
+        +config: Appconfig ++
+        +models: TaskModels
+        +task_repository: TaskRepository
+        +task_service: TaskService
+        +classifier() 
+    }
+
+    class TaskModels {
+        +conn: sqlite3.Connection
+        +repository: TaskRepository
+        +add_task()
+        +get_all_tasks()
+        +close()
+    }
+
+    class TaskRepository {
+        +conn: sqlite3.Connection
+        +add_task()
+        +_create_table()
+    }
+
+    class TaskService {
+        +repository: TaskRepository
+        +classifier: SimpleClassifier
+        +create_task()
+        +_init_training_file() 
+    }
+
+    class SimpleClassifier {
+        +model: Pipeline
+        +data_path: Path
+        +model_path: Path 
+        +train()
+        +predict()
+        +chinese_tokenizer() 
+    }
+
+    class Appconfig {
+        +MAX_FEATURES: int
+        +N_ESTIMATORS: int
+        +DB_PATH: Path
+        +MODEL_DIR: Path 
+    }
+
+    class DomainError {
+        <<Exception>>
+        +context: dict
+        +original_exc: Exception
+    }
+
+    class ValidationError {
+        <<Exception>>
+    }
+
+    class AIClassificationError {
+        <<Exception>>
+    } 
+
+    class TrainingError {
+        <<Exception>>
+        +add_context() ++
+    } 
+
+    class DatabaseError {
+        <<Exception>>
+    }
+
+    TaskController --> Container : 组合
+    TaskController --> Appconfig : 依赖 
+    Container --> Appconfig : 组合 
+    TaskService --> Appconfig : 依赖 
+    SimpleClassifier --> Appconfig : 依赖 
+    TaskService ..> AIClassificationError : 抛出 
+    SimpleClassifier ..> DomainError : 抛出
+    TrainingError --|> DomainError 
+    AIClassificationError --|> DomainError 
+    DomainError <|-- ValidationError
+    DomainError <|-- DatabaseError : 修复继承关系
+
+    %% 上一个版本
+    TaskController --> MainView : 组合
+    Container --> TaskModels : 组合
+    Container --> TaskRepository : 组合
+    Container --> TaskService : 组合
+    TaskModels --> TaskRepository : 提供连接、组合
+    TaskService --> TaskRepository : 依赖
+    TaskRepository ..> DatabaseError : 抛出
+    TaskService ..> ValidationError : 抛出
+```
 ---
 https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNp9UctOwlAQ_RUyayBSWoEuTOShKzfiypbFlV4esfQ2l1ZFIPFBNJrwMBgXSoxGTVxq4sKEoD9DW_gLL2-IxllMZs49c-ZMbhGSRMEgQkol-8kMooZrKyxrLhb986p9X7EuqtK06rafnIdjp91kbcLl8ayU7HrDqt_Yrap1-Wi9n5QmU42aNK0Wpkbao5w3d9IU6ZnZqhE-iFUpQjSDElXFNDEHD7a6wpJz92HXXuxmtdtpbbAL1F-cyJhjPVecxln385Y57B-1e19XYyrWlP_MNGozxei8maF6TOq9nTrXr3FM97JJPLc9Jk2wIXFN-ttkbPi6LnU730xmE-sknzUILczMgRtymOZQVmHfUxzAMhgZnMMyiKxUEN2VQdbKjIdMg8QLWhJEg5rYDZSY6QyIKaTmWWfqCjJwNIvYfbkpqiNtm5CFHsQiHIDoCwa8vF8ICH6B9_kEjnNDAUTOGwyEQv4QtxQKcMs8zwtlNxwOFXzlH83i5KU
 除了 Added（新增）和 Changed（变更）之外，常见的记录类型还有：
