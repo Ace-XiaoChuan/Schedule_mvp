@@ -32,7 +32,7 @@ class SimpleClassifier:
                 ngram_range=(1, 2),
                 tokenizer=chinese_tokenizer,  # 添加自定义分词器
                 token_pattern=None,  # 禁用默认正则分词
-                max_features=5000,  # 优化特征维度
+                max_features=5000,  # 特征维度
                 stop_words=["的", "了", "在", "于", "与", "是"]
             )),
             # 第二个步骤：分类器。
