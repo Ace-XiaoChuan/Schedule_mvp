@@ -2,6 +2,10 @@ import tkinter as tk
 from datetime import datetime
 from tkinter import ttk, messagebox
 from core import config
+import matplotlib
+
+matplotlib.rcParams['font.sans-serif'] = ['SimHei']  # 使用支持中文的字体
+matplotlib.rcParams['axes.unicode_minus'] = False
 
 
 class MainView:
@@ -34,6 +38,7 @@ class MainView:
         self.cm_btn.pack(side=tk.LEFT, padx=5)
 
         # 显示混淆矩阵结果
+
     def show_confusion_matrix(self):
         try:
             from ai.ai_classifier import SimpleClassifier
