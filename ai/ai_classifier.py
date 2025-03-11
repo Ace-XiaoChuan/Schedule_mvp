@@ -11,7 +11,7 @@ from sklearn.ensemble import RandomForestClassifier
 # joblib 是一个用于 简化并行计算 和 高效序列化大型数据 的 Python 库。
 # 自定义中文分词器
 def chinese_tokenizer(text):
-    # 这是模块级别的普通函数，所以没有self，也就是全局函数
+    # 全局函数
     return jieba.lcut(text)
 
 
@@ -25,10 +25,7 @@ class SimpleClassifier:
         print(f"模型路径：{self.model_path}")
 
         # model是训练好的分类器
-        # Pipeline 是 scikit-learn 中的一个类，用来将多个步骤（例如数据预处理、特征提取、模型训练等）
-        # 串联成一个整体，使得这些步骤像一个单独的模型一样工作。它的作用是简化工作流程，并确保每个步骤都依赖于前一个步骤的输出。
-        # Pipeline接受一个包含多个步骤的列表，每个步骤都是一个
-        # 二元组（name, operation）
+        # Pipeline接受一个列表，每个tuple都是一个二元组（name, operation）
         self.model = Pipeline([
             # TfidfVectorizer() 会将输入的文本数据转换成数值化的特征矩阵，每个单词的权重由其在文本中的频率和逆文档频率决定。
             ('tfidf', TfidfVectorizer(
@@ -39,11 +36,6 @@ class SimpleClassifier:
                 stop_words=["的", "了", "在", "于", "与", "是"]
             )),
             # 第二个步骤：分类器。
-            # LinearSVC 是 scikit-learn 中的一个分类器，属于支持向量机（SVM）的一种实现。它用于进行线性分类，
-            # 通过寻找一个超平面将不同类别的数据进行区分。这个步骤会使用从 TfidfVectorizer 输出的特征（TF-IDF 特征矩阵）来训练一个分类模型。
-            # SVM 的核心思想是通过找到一个最佳的超平面（decision hyperplane）来分离不同类别的数据。
-            # 它在机器学习中非常流行，尤其是在小样本、特征较高的情境中表现出色。最优超平面的选择标准是使得两类数据点之间的间隔最大化，
-            # 每个数据点都要满足它位于正确的类别一侧，即离超平面正确的一侧
             ('clf', RandomForestClassifier(
                 n_estimators=100,  # 树的数量
                 class_weight='balanced',

@@ -117,6 +117,94 @@ schedule_mvp/
 ### Security
 取消了主要文件的一部分硬编码，移动到目录下的core/config里，以后有机会可以尝试进一步把SQL部分也取消硬编码，但这部分不急。
 
+## [1.1.3] - 2025-03-11
+### Added
+新增了任务数据持续收集的功能，现在模型可以不断演化了。但是仍然只是mvp版本。在未来计划加入数据清洗功能。
+```mermaid
+classDiagram
+    class TaskController {
+        +container: Container
+        +view: MainView
+        +model: TaskModels
+        +classifier: SimpleClassifier
+        +task_service: TaskService
+        +handle_manual_task()
+        +start_auto_task()
+        +stop_auto_task()
+        +auto_classify()
+    }
+
+    class MainView {
+        +window: Tk
+        +title_entry: Entry
+        +category_combo: Combobox
+        +task_list: Treeview
+        +set_manual_task_handler()
+        +refresh_task_list()
+        +show_error()
+    }
+
+    class Container {
+        -_classifier: SimpleClassifier
+        +models: TaskModels
+        +task_repository: TaskRepository
+        +task_service: TaskService
+        +classifier() 属性
+    }
+
+    class TaskModels {
+        +conn: sqlite3.Connection
+        +repository: TaskRepository
+        +add_task()
+        +get_all_tasks()
+        +close()
+    }
+
+    class TaskRepository {
+        +conn: sqlite3.Connection
+        +add_task()
+        +_create_table()
+    }
+
+    class TaskService {
+        +repository: TaskRepository
+        +classifier: SimpleClassifier
+        +create_task()
+    }
+
+    class SimpleClassifier {
+        +model: Pipeline
+        +train()
+        +predict()
+    }
+
+    class DomainError {
+        <<Exception>>
+    }
+
+    class ValidationError {
+        <<Exception>>
+    }
+
+    class DatabaseError {
+        <<Exception>>
+    }
+
+    TaskController --> Container : 组合
+    TaskController --> MainView : 组合
+    TaskController --> TaskService : 依赖
+    Container --> TaskModels : 组合
+    Container --> TaskRepository : 组合
+    Container --> TaskService : 组合
+    Container --> SimpleClassifier : 延迟初始化，但不改变组合关系
+    TaskModels --> TaskRepository : 提供连接、组合
+    TaskService --> TaskRepository : 依赖
+    TaskService --> SimpleClassifier : 依赖
+    TaskRepository ..> DatabaseError : 抛出
+    TaskService ..> ValidationError : 抛出
+    SimpleClassifier ..> DomainError : 抛出
+
+```
 ---
 https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNp9UctOwlAQ_RUyayBSWoEuTOShKzfiypbFlV4esfQ2l1ZFIPFBNJrwMBgXSoxGTVxq4sKEoD9DW_gLL2-IxllMZs49c-ZMbhGSRMEgQkol-8kMooZrKyxrLhb986p9X7EuqtK06rafnIdjp91kbcLl8ayU7HrDqt_Yrap1-Wi9n5QmU42aNK0Wpkbao5w3d9IU6ZnZqhE-iFUpQjSDElXFNDEHD7a6wpJz92HXXuxmtdtpbbAL1F-cyJhjPVecxln385Y57B-1e19XYyrWlP_MNGozxei8maF6TOq9nTrXr3FM97JJPLc9Jk2wIXFN-ttkbPi6LnU730xmE-sknzUILczMgRtymOZQVmHfUxzAMhgZnMMyiKxUEN2VQdbKjIdMg8QLWhJEg5rYDZSY6QyIKaTmWWfqCjJwNIvYfbkpqiNtm5CFHsQiHIDoCwa8vF8ICH6B9_kEjnNDAUTOGwyEQv4QtxQKcMs8zwtlNxwOFXzlH83i5KU
 除了 Added（新增）和 Changed（变更）之外，常见的记录类型还有：
@@ -133,4 +221,3 @@ Fixed（修复）
 Security（安全）
 表示修复了安全漏洞或对安全相关的改进。
 
-[def]: as
