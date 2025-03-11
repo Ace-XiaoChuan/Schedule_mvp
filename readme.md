@@ -154,10 +154,11 @@ classDiagram
     Container --> TaskModels : 组合
     Container --> TaskRepository : 组合
     Container --> TaskService : 组合
+    Container --> SimpleClassifier : 组合
     TaskModels --> TaskRepository : 提供连接、组合
     TaskService --> TaskRepository : 依赖
 ```
-```
+
 
 ## 开发文档
 
