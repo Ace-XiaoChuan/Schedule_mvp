@@ -66,68 +66,65 @@ class SimpleClassifier:
         # 另外关于predict([text])[0]：[text]将单个文本字符串包装成列表，因为scikit-learn的predict方法通常期望一个样本集合，即使只有一个样本也需要列表形式。
         pred = self.model.predict([text])[0]
 
-        # 我的方法：
-        # 决策分数（即样本至超平面的距离）
-        # decision_score = self.model.decision_function([text])[0]
-        # # 计算置信度百分比（基于决策分数相对值）
-        # max_score = np.max(decision_score)
-        # min_score = np.min(decision_score)
-        # confidence = int(100 * (max_score - min_score) / (max_score if max_score != 0 else 1))
-        # return pred, min(100, max(0, confidence))  # 确保在0-100之间
-
-        # 新方法：
-        # decision_scores = self.model.decision_function([text])[0]
-        # exp_scores = np.exp(decision_scores - np.max(decision_scores))
-        # probs = exp_scores / exp_scores.sum()
-        # confidence = int(100 * probs.max())
-        # return pred, confidence
-
-        # 随机森林内置的概率估计方法：
+        # 不再手动计算，用随机森林内置的概率估计方法：
         probs = self.model.predict_proba([text])[0]
         confidence = int(100 * np.max(probs))
         return pred, confidence
 
-    #         对于新的方法，感觉在重点不在编程上，在数学上。举个例子：decision_scores=[5,3,2],然后减去当中的最大值→[[0, -2, -3]（以免指数爆炸）
-    #         exp为指数运算，计算结果为[1.0, 0.135, 0.050]，经过这样的计算，全部转化为正数，并且放大了之间的差异。这是L80做的事情。
-    #         然后将指数值除总和，得到了概率分布，例如：1.0 + 0.135 + 0.050 = 1.185 → 概率为 [0.844, 0.114, 0.042]，再取最大的转为百分比，
-    #         这种计算方式被称作softmax
     def evaluate(self):
         """
         生成、显示混淆矩阵
         """
         # 先加载数据
         data = pd.read_csv(self.data_path)
+        labels: list = sorted(data['label'].unique())
 
         # 划分训练测试集
-        X_train, X_test, y_train, y_test = train_test_split(
+        x_train, x_test, y_train, y_test = train_test_split(
             data['text'], data['label'],
-            test_size=0.2,
+            test_size=0.2,  # 20%拿来测试
             random_state=42
         )
 
         # - 如果已有模型：加载
-        # - 如果没有模型：训练
         if Path(self.model_path).exists():
             self.model = joblib.load(self.model_path)  # 加载已保存的模型
+        # - 如果没有模型：训练
         else:
-            self.model.fit(X_train, y_train)  # 训练新模型
+            self.model.fit(data['text'], data['label'])  # 训练新模型
             joblib.dump(self.model, self.model_path)  # 保存模型
 
         # 预测测试集
-        y_pred = self.model.predict(X_test)
+        y_pred = self.model.predict(x_test)
 
         # 生成混淆矩阵
         cm = confusion_matrix(y_test, y_pred)
 
-        # 可视化
+        # 可视化:创建窗口
         plt.figure(figsize=(8, 6))
+        # 计算百分比
+        cm_percent = cm / cm.sum(axis=1)[:, np.newaxis]
+
+        # 组合数值和百分比
+        annot = []
+        for i in range(len(cm)):
+            for j in range(len(cm)):
+                percent = cm_percent[i, j]
+                color = "white" if percent > 0.5 else "black"  # 自适应文字颜色
+                plt.text(j + 0.5, i + 0.5,
+                         f"{cm[i, j]}\n({percent:.1%})",
+                         ha="center", va="center",
+                         color=color)
+
+        # seaborn热力图
         sns.heatmap(cm,
                     annot=True,
-                    fmt='d',
+                    fmt='',
                     cmap='Blues',
-                    xticklabels=['工作', '休闲', '睡眠'],
-                    yticklabels=['工作', '休闲', '睡眠'])
-        plt.title('Confusion Matrix')
+                    xticklabels=labels,
+                    yticklabels=labels
+                    )
+        plt.title('混淆矩阵Confusion Matrix')
         plt.ylabel('True Label')
         plt.xlabel('Predicted Label')
         plt.show()
