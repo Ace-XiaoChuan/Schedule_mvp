@@ -36,12 +36,14 @@ class SimpleClassifier:
                 ngram_range=(1, 2),
                 tokenizer=chinese_tokenizer,  # 添加自定义分词器
                 token_pattern=None,  # 禁用默认正则分词
-                max_features=5000,  # 特征维度
-                stop_words=["的", "了", "在", "于", "与", "是"]
+                max_features=2000,  # 特征维度
+                stop_words=["的", "了", "在", "于", "与", "是", "我"]
             )),
             # 第二个步骤：分类器。
             ('clf', RandomForestClassifier(
-                n_estimators=100,  # 树的数量
+                n_estimators=30,  # 树的数量
+                max_depth=5,
+                min_samples_split=10,  # 增加分裂最小样本数
                 class_weight='balanced',
                 random_state=42  # 确保结果可复现
             ))  # 分类器
@@ -75,23 +77,33 @@ class SimpleClassifier:
         """
         生成、显示混淆矩阵
         """
+
         # 先加载数据
         data = pd.read_csv(self.data_path)
         labels: list = sorted(data['label'].unique())
 
-        # 划分训练测试集
+        print("数据分布统计:")
+        print(data['label'].value_counts())
+        # 输出样例：
+        # 工作    58
+        # 休闲    32
+        # 睡眠    10
+
+        # 划分训练测试集、分层抽样
         x_train, x_test, y_train, y_test = train_test_split(
             data['text'], data['label'],
             test_size=0.2,  # 20%拿来测试
+            stratify=data['label'],
             random_state=42
         )
 
         # - 如果已有模型：加载
         if Path(self.model_path).exists():
             self.model = joblib.load(self.model_path)  # 加载已保存的模型
-        # - 如果没有模型：训练
+        # - 如果没有模型：用训练集数据训练
         else:
-            self.model.fit(data['text'], data['label'])  # 训练新模型
+            print("未检测到训练模型，开始进行全量训练...")
+            self.model.fit(x_train, y_train)  # 训练新模型
             joblib.dump(self.model, self.model_path)  # 保存模型
 
         # 预测测试集
@@ -99,11 +111,11 @@ class SimpleClassifier:
 
         # 生成混淆矩阵
         cm = confusion_matrix(y_test, y_pred)
-
-        # 可视化:创建窗口
-        plt.figure(figsize=(8, 6))
         # 计算百分比
         cm_percent = cm / cm.sum(axis=1)[:, np.newaxis]
+
+        # 可视化:创建窗口
+        plt.figure(figsize=(8, 6), dpi=120)
 
         # 组合数值和百分比
         annot = []
@@ -118,13 +130,14 @@ class SimpleClassifier:
 
         # seaborn热力图
         sns.heatmap(cm,
-                    annot=True,
+                    annot=[[f"{val}\n({perc:.1%})" for val, perc in zip(cm_row, percent_row)]
+                           for cm_row, percent_row in zip(cm, cm_percent)],
                     fmt='',
                     cmap='Blues',
                     xticklabels=labels,
                     yticklabels=labels
                     )
-        plt.title('混淆矩阵Confusion Matrix')
+        plt.title('混淆矩阵（Confusion Matrix）')
         plt.ylabel('True Label')
         plt.xlabel('Predicted Label')
         plt.show()
