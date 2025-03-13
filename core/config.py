@@ -12,6 +12,7 @@ class Appconfig:
         self.BASE_DIR = Path(__file__).parent.parent  # schedule
         self.DB_PATH = self.BASE_DIR / self.config['PATHS']['database']  # 后半：读取配置文件中 [PATHS] 节下 database 键对应的相对路径
         self.MODEL_DIR = self.BASE_DIR / self.config['PATHS']['models']
+        self.DATA_PATH = self.BASE_DIR / self.config['PATHS']['training_data']
 
         # 模型参数
         self.MAX_FEATURES = int(self.config['MODEL']['max_features'])  # 5000/100先这么多

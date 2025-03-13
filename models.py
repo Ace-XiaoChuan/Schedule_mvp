@@ -3,6 +3,8 @@ from datetime import datetime
 from repositories.task_repository import TaskRepository
 
 
+# 仅定义数据结构和数据库连接，不直接操作数据。
+
 class TaskModels:
     def __init__(self, db_path: str):
         self.conn = sqlite3.connect(db_path)

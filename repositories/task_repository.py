@@ -2,9 +2,11 @@ import sqlite3
 from datetime import datetime
 from core.exceptions import DatabaseError
 from core import config
+
+
 # from ..core会报错，直接运行脚本main.py,主模块将会不被视为任何包的一部分，即使它处于目录当中。当前模块儿的__package__会为空。所以不能够使用间接路径导入
 # 而使用绝对路径导入工作机制完全不一样。Python会在sys.path列表中的所有路径下查找要导入的模块，core显然在这里面。Claude也建议我使用绝对导入。
-
+# 封装所有数据库操作
 
 class TaskRepository:
     """

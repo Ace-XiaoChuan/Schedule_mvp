@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
+from core import config
 
 
 # joblib 是一个用于 简化并行计算 和 高效序列化大型数据 的 Python 库。
@@ -21,12 +22,10 @@ def chinese_tokenizer(text):
 
 class SimpleClassifier:
     def __init__(self, max_features=5000, n_estimators=100):
-        self.script_dir = Path(__file__).parent
-        self.data_path = self.script_dir / "tasks.csv"
-        self.model_path = self.script_dir / "simple_model.pkl"
-        # 调试路径（完成后可删除）
-        print(f"数据路径：{self.data_path}")
-        print(f"模型路径：{self.model_path}")
+        self.script_dir = Path(__file__).parent  # ai
+        self.data_path = config.config.DATA_PATH
+        self.model_path = config.config.MODEL_DIR
+        print(self.script_dir)
 
         # model是训练好的分类器
         # Pipeline接受一个列表，每个tuple都是一个二元组（name, operation）
@@ -84,15 +83,11 @@ class SimpleClassifier:
 
         print("数据分布统计:")
         print(data['label'].value_counts())
-        # 输出样例：
-        # 工作    58
-        # 休闲    32
-        # 睡眠    10
 
         # 划分训练测试集、分层抽样
         x_train, x_test, y_train, y_test = train_test_split(
             data['text'], data['label'],
-            test_size=0.2,  # 20%拿来测试
+            test_size=0.2,  # 训练集测试集8:2吧，以后如果引入验证集，那就6:2:2
             stratify=data['label'],
             random_state=42
         )
