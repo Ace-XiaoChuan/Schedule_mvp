@@ -11,10 +11,12 @@ from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
 from core import config
+from core.logger import configure_logger
+
+logger = configure_logger()
 
 
 # joblib 是一个用于 简化并行计算 和 高效序列化大型数据 的 Python 库。
-# 自定义中文分词器
 def chinese_tokenizer(text):
     # 全局函数
     return jieba.lcut(text)
@@ -25,7 +27,8 @@ class SimpleClassifier:
         self.script_dir = Path(__file__).parent  # ai
         self.data_path = config.config.DATA_PATH
         self.model_path = config.config.MODEL_DIR
-        print(self.script_dir)
+        logger.debug(f"模型数据为：{self.data_path}")
+        logger.debug(f"数据路径为：{self.model_path}")
 
         # model是训练好的分类器
         # Pipeline接受一个列表，每个tuple都是一个二元组（name, operation）
@@ -53,7 +56,7 @@ class SimpleClassifier:
         data = pd.read_csv(self.data_path)
         # 新增，打乱数据顺序
         data = data.sample(frac=1).reset_index(drop=True)
-        print(f"成功加载{len(data)}条真实样本数据")
+        logger.info(f"成功加载{len(data)}条真实样本数据")
         self.model.fit(data['text'], data['label'])
         joblib.dump(self.model, self.model_path)
 
@@ -97,7 +100,7 @@ class SimpleClassifier:
             self.model = joblib.load(self.model_path)  # 加载已保存的模型
         # - 如果没有模型：用训练集数据训练
         else:
-            print("未检测到训练模型，开始进行全量训练...")
+            logger.error("未检测到训练模型，开始进行全量训练...")
             self.model.fit(x_train, y_train)  # 训练新模型
             joblib.dump(self.model, self.model_path)  # 保存模型
 

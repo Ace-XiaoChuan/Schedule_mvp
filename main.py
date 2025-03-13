@@ -6,18 +6,19 @@ from view import MainView
 from ai.ai_classifier import SimpleClassifier  # 直接从模块导入
 from core import ValidationError, AIClassificationError  # 只导入异常
 from core.container import Container  # 单独导入容器
-from logging.handlers import RotatingFileHandler
+from core.logger import configure_logger
+
+logger = configure_logger()
 
 
 class TaskController:
     def __init__(self):
-        print("初始化控制器...")
-        # 组合关系
+        logger.info("初始化控制器")
         self.container = Container()
         self.view = MainView()
         self.model = self.container.models
 
-        print("初始化分类器...")
+        logger.info("初始化分类器...")
         self.classifier = SimpleClassifier()
 
         # 通过容器获取服务层的实例
@@ -26,13 +27,13 @@ class TaskController:
         try:
             self.classifier.train()  # 确保训练模型（或检查已有模型）
         except Exception as e:
-            print(f"训练失败：{str(e)}")
+            logger.error(f"训练失败：{str(e)}")
             return
 
-        print("绑定事件监听器...")
+        logger.info("绑定事件监听器...")
 
         self.view.title_entry.bind("<KeyRelease>", self.auto_classify)
-        print("控制器初始化完成")
+        logger.info("控制器初始化完成")
 
         # 绑定事件处理器1:设置手动任务处理器（依赖倒置原则）
         self.view.set_manual_task_handler(self.handle_manual_task)
@@ -123,7 +124,7 @@ class TaskController:
             self.view.show_confidence(pred_category, confidence)
 
         except Exception as e:
-            print(f"自动分类异常：{str(e)}")
+            logger.error(f"自动分类异常：{str(e)}")
             self.view.show_confidence("", 0)
 
     def shutdown(self):
