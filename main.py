@@ -7,7 +7,7 @@ from ai.ai_classifier import SimpleClassifier  # 直接从模块导入
 from core import ValidationError, AIClassificationError  # 只导入异常
 from core.container import Container  # 单独导入容器
 from core.logger import configure_logger
-
+# 表示层 → 控制器层 → 服务层 → 仓储层 → 模型层 → 数据层 → 核心层 | 基础设施层
 logger = configure_logger()
 
 
