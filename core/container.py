@@ -6,8 +6,9 @@ from .config import Appconfig
 
 class Container:
     """
+    表示层 → 控制器层 → 服务层 → 仓储层 → 模型层 → 数据层 → 核心层 | 基础设施层
         依赖注入容器（Dependency Injection Container）
-
+        基础设施层
         职责：
           1. 集中管理应用程序的核心组件
           2. 控制组件的生命周期和初始化顺序
@@ -22,19 +23,20 @@ class Container:
     def __init__(self):
 
         """组合关系初始化核心基础设施层组件"""
-        self.config = Appconfig()
-        self.models = TaskModels(str(self.config.DB_PATH))  # 数据库模型管理器
-
-        # 延迟初始化，据信在Python中构造方法中声明所有属性是一种良好实践，以后都要这么做
-        # 同时初始化为空值暗示没有完成初始化。
+        # 延迟初始化，在Python中构造方法中声明所有属性是一种良好实践
+        # 初始化为空值暗示没有完成初始化。
         # 声明(Declaration)：创建变量名
         # 分配(Assignment)：给变量赋值
         # 初始化(Initialization)：首次给变量赋予有意义的值
         # 实例化(Instantiation)：创建类的实例对象
         # 所以这里只是声明并且分配，但是没有初始化和实例化，其实没什么意义
+
+        self.config = Appconfig()
+        self.models = TaskModels(str(self.config.DB_PATH))  # 数据库模型管理器
         self._task_repository = None
         self._classifier = None
         self._task_service = None
+
 
     @property
     def task_repository(self):
@@ -65,6 +67,7 @@ class Container:
           2. 不存在则触发训练并保存模型
           3. 存在则直接加载已有模型
         """
+        # 分类器不存在：延迟创建
         if self._classifier is None:
             # 确保单例。同时SimpleClassifier 的实例完全由 Container 管理，外部代码无法直接访问或控制这个实例。
             from ai.ai_classifier import SimpleClassifier
@@ -86,3 +89,5 @@ class Container:
             except Exception as e:
                 # 统一异常转换（核心错误处理策略）
                 raise RuntimeError(f"分类器初始化失败：{str(e)}") from e
+        # 分类器存在：直接返回
+        return self._classifier

@@ -13,7 +13,7 @@ import csv
 
 class TaskService:
     def __init__(self, repository, classifier):
-        # 这里的仓储层在服务层中被依赖，这很号，符合规范
+        # repository, classifier于容器层被创建，
         self.repository = repository
         self.classifier = classifier
         self.train_file = Path("ai/tasks.csv")

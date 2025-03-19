@@ -3,7 +3,6 @@ import tkinter as tk
 import tkinter.messagebox as messagebox
 from core import config
 from view import MainView
-from ai.ai_classifier import SimpleClassifier  # 直接从模块导入
 from core import ValidationError, AIClassificationError  # 只导入异常
 from core.container import Container  # 单独导入容器
 from core.logger import configure_logger
@@ -19,7 +18,7 @@ class TaskController:
         self.model = self.container.models
 
         logger.info("初始化分类器...")
-        self.classifier = SimpleClassifier()
+        self.classifier = self.container.classifier
 
         # 通过容器获取服务层的实例
         self.task_service = self.container.task_service
