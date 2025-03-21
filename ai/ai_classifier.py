@@ -1,142 +1,141 @@
 import numpy as np
 import pandas as pd
-from sklearn.pipeline import Pipeline
-from sklearn.feature_extraction.text import TfidfVectorizer
-import joblib
-from pathlib import Path
-import jieba
-from sklearn.ensemble import RandomForestClassifier
+import torch
+from transformers import BertTokenizer, BertForSequenceClassification, AdamW
+from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
+from pathlib import Path
 from core import config
 from core.logger import configure_logger
+import logging
 
-logger = configure_logger()
-
-
-# joblib 是一个用于 简化并行计算 和 高效序列化大型数据 的 Python 库。
-def chinese_tokenizer(text):
-    # 全局函数
-    return jieba.lcut(text)
+logger = logging.getLogger('schedule_mvp')  # 获取已有的 logger，不重新配置
 
 
 class SimpleClassifier:
-    def __init__(self, max_features=5000, n_estimators=100):
-        self.script_dir = Path(__file__).parent  # ai
-        self.data_path = config.config.DATA_PATH
-        self.model_path = config.config.MODEL_DIR
+    def __init__(self, max_features=5000, n_estimators=100):  # 参数保留但不使用，仅为兼容
+        self.script_dir = Path(__file__).parent
+        self.data_path = config.config.DATA_PATH  # tasks.csv路径
+        self.model_path = config.config.MODEL_DIR  # 模型保存路径
         logger.debug(f"模型数据为：{self.data_path}")
         logger.debug(f"数据路径为：{self.model_path}")
 
-        # model是训练好的分类器
-        # Pipeline接受一个列表，每个tuple都是一个二元组（name, operation）
-        self.model = Pipeline([
-            # TfidfVectorizer() 会将输入的文本数据转换成数值化的特征矩阵，每个单词的权重由其在文本中的频率和逆文档频率决定。
-            ('tfidf', TfidfVectorizer(
-                ngram_range=(1, 2),
-                tokenizer=chinese_tokenizer,  # 添加自定义分词器
-                token_pattern=None,  # 禁用默认正则分词
-                max_features=2000,  # 特征维度
-                stop_words=["的", "了", "在", "于", "与", "是", "我"]
-            )),
-            # 第二个步骤：分类器。
-            ('clf', RandomForestClassifier(
-                n_estimators=30,  # 树的数量
-                max_depth=5,
-                min_samples_split=10,  # 增加分裂最小样本数
-                class_weight='balanced',
-                random_state=42  # 确保结果可复现
-            ))  # 分类器
-            # 元组中的第一个元素是该步骤的名称，第二个元素是转换器/估计器
-        ])
+        # 初始化BERT模型和分词器
+        self.tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
+        self.model = BertForSequenceClassification.from_pretrained(
+            'bert-base-chinese',
+            num_labels=3  # 分类数：工作、休闲、睡眠
+        )
+        self.label_map = {"工作": 0, "休闲": 1, "睡眠": 2}
+        self.inverse_label_map = {v: k for k, v in self.label_map.items()}
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model.to(self.device)
 
     def train(self):
+        """训练BERT模型并保存"""
+        # 加载数据
         data = pd.read_csv(self.data_path)
-        # 新增，打乱数据顺序
-        data = data.sample(frac=1).reset_index(drop=True)
+        data = data.sample(frac=1).reset_index(drop=True)  # 打乱数据
         logger.info(f"成功加载{len(data)}条真实样本数据")
-        self.model.fit(data['text'], data['label'])
-        joblib.dump(self.model, self.model_path)
+
+        # 数据预处理
+        texts = data['text'].tolist()
+        labels = [self.label_map[label] for label in data['label']]
+        encodings = self.tokenizer(texts, padding=True, truncation=True, max_length=32, return_tensors="pt")
+        dataset = TensorDataset(
+            encodings['input_ids'],
+            encodings['attention_mask'],
+            torch.tensor(labels)
+        )
+        dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
+
+        # 优化器
+        optimizer = AdamW(self.model.parameters(), lr=2e-5)
+
+        # 训练循环
+        self.model.train()
+        for epoch in range(3):  # 训练3轮
+            for batch in dataloader:
+                input_ids, attention_mask, labels = [b.to(self.device) for b in batch]
+                outputs = self.model(input_ids, attention_mask=attention_mask, labels=labels)
+                loss = outputs.loss
+                loss.backward()
+                optimizer.step()
+                optimizer.zero_grad()
+            logger.info(f"Epoch {epoch + 1} 完成，损失: {loss.item():.4f}")
+
+        # 保存模型
+        self.model.save_pretrained(self.model_path)
+        self.tokenizer.save_pretrained(self.model_path)
+        logger.info("模型训练完成并保存")
 
     def predict(self, text):
-        """返回预测结果，于main里被调用
-        :param text: text = self.view.title_entry.get()
-        :return: 预测结果(str)及预测准确率[30%,20%,10%]
-        """
-        # 老忘，这个model跟mvc的那个重名了，但是实际意思是上边构造函数训练好的分类器
-        # self.model.predict([text]) 返回一个列表,第一个元素为最可能结果
-        pred:str = self.model.predict([text])[0]
+        """预测单个任务标题的分类"""
+        self.model.eval()
+        inputs = self.tokenizer(text, padding=True, truncation=True, max_length=32, return_tensors="pt")
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
-        # predict_proba([text])返回二维数组，probs=predict_proba([text])[0]返回一维NumPy数组
-        # nd:n-dimensional
-        probs:np.ndarray = self.model.predict_proba([text])[0]
-        confidence = int(100 * np.max(probs))
-        return pred, confidence
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+        logits = outputs.logits
+        pred_idx = torch.argmax(logits, dim=1).item()
+        confidence = torch.softmax(logits, dim=1).max().item() * 100
+
+        pred_category = self.inverse_label_map[pred_idx]
+        return pred_category, int(confidence)
 
     def evaluate(self):
-        """
-        生成、显示混淆矩阵
-        """
-
-        # 先加载数据
+        """生成并显示混淆矩阵"""
         data = pd.read_csv(self.data_path)
-        labels: list = sorted(data['label'].unique())
+        labels = sorted(self.label_map.keys())
 
-        print("数据分布统计:")
-        print(data['label'].value_counts())# 3
-
-        # 划分训练测试集、分层抽样
-        # x_train 和 y_train：训练集中的特征数据和对应的标签，eg:吃饭睡觉打豆豆，休闲
-        # x_test 和 y_test：测试集中的特征数据和对应的标签数据
+        # 划分训练和测试集
         x_train, x_test, y_train, y_test = train_test_split(
             data['text'], data['label'],
-            test_size=0.2,  # 训练集测试集8:2吧，以后如果引入验证集，那就6:2:2
+            test_size=0.2,
             stratify=data['label'],
             random_state=42
         )
+        logger.info("数据分布统计:")
+        logger.info(data['label'].value_counts())
 
-        # 如果已有模型：加载
-        if Path(self.model_path).exists():
-            self.model = joblib.load(self.model_path)  # 加载已保存的模型
-        # 如果没有模型：用训练集数据训练
+        # 检查是否已有训练模型
+        model_dir = Path(self.model_path)
+        if model_dir.exists() and any(model_dir.iterdir()):
+            self.model = BertForSequenceClassification.from_pretrained(self.model_path)
+            self.tokenizer = BertTokenizer.from_pretrained(self.model_path)
+            logger.info("加载已有模型")
         else:
-            logger.error("未检测到训练模型，开始进行全量训练...")
-            self.model.fit(x_train, y_train)  # 训练新模型
-            joblib.dump(self.model, self.model_path)  # 保存模型
+            logger.error("未检测到训练模型，开始全量训练...")
+            self.train()
 
         # 预测测试集
-        y_pred = self.model.predict(x_test)
+        self.model.to(self.device)
+        self.model.eval()
+        y_pred = []
+        for text in x_test:
+            pred, _ = self.predict(text)
+            y_pred.append(self.label_map[pred])
 
         # 生成混淆矩阵
-        cm = confusion_matrix(y_test, y_pred)
-        # 计算百分比
+        y_test_numeric = [self.label_map[label] for label in y_test]
+        cm = confusion_matrix(y_test_numeric, y_pred)
         cm_percent = cm / cm.sum(axis=1)[:, np.newaxis]
 
-        # 可视化:创建窗口
+        # 可视化
         plt.figure(figsize=(8, 6), dpi=120)
-
-        # 组合数值和百分比
-        annot = []
-        for i in range(len(cm)):
-            for j in range(len(cm)):
-                percent = cm_percent[i, j]
-                color = "white" if percent > 0.5 else "black"  # 自适应文字颜色
-                plt.text(j + 0.5, i + 0.5,
-                         f"{cm[i, j]}\n({percent:.1%})",
-                         ha="center", va="center",
-                         color=color)
-
-        # seaborn热力图
-        sns.heatmap(cm,
-                    annot=[[f"{val}\n({perc:.1%})" for val, perc in zip(cm_row, percent_row)]
-                           for cm_row, percent_row in zip(cm, cm_percent)],
-                    fmt='',
-                    cmap='Blues',
-                    xticklabels=labels,
-                    yticklabels=labels
-                    )
+        sns.heatmap(
+            cm,
+            annot=[[f"{val}\n({perc:.1%})" for val, perc in zip(cm_row, percent_row)]
+                   for cm_row, percent_row in zip(cm, cm_percent)],
+            fmt='',
+            cmap='Blues',
+            xticklabels=labels,
+            yticklabels=labels
+        )
         plt.title('混淆矩阵（Confusion Matrix）')
         plt.ylabel('True Label')
         plt.xlabel('Predicted Label')
@@ -145,5 +144,6 @@ class SimpleClassifier:
 
 if __name__ == "__main__":
     classifier = SimpleClassifier()
-    classifier.train()  # 新增训练步骤
-    print(classifier.predict("学习Python"))
+    classifier.train()
+    pred, conf = classifier.predict("学习Python")
+    print(f"预测分类: {pred}, 置信度: {conf}%")

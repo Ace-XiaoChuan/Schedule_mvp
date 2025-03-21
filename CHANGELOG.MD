@@ -329,19 +329,13 @@ classDiagram
 ### Fixed
 - 修改了ai分类器的evaluate方法，使之更加科学。
 
+## [1.3.0] - 2025-3-21
+### Fixed
+- 解决了控制台打印两次日志的问题
+### Changed
+- 更改手动的tfidf+随机森林为BERT
+
 ---
 https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNp9UctOwlAQ_RUyayBSWoEuTOShKzfiypbFlV4esfQ2l1ZFIPFBNJrwMBgXSoxGTVxq4sKEoD9DW_gLL2-IxllMZs49c-ZMbhGSRMEgQkol-8kMooZrKyxrLhb986p9X7EuqtK06rafnIdjp91kbcLl8ayU7HrDqt_Yrap1-Wi9n5QmU42aNK0Wpkbao5w3d9IU6ZnZqhE-iFUpQjSDElXFNDEHD7a6wpJz92HXXuxmtdtpbbAL1F-cyJhjPVecxln385Y57B-1e19XYyrWlP_MNGozxei8maF6TOq9nTrXr3FM97JJPLc9Jk2wIXFN-ttkbPi6LnU730xmE-sknzUILczMgRtymOZQVmHfUxzAMhgZnMMyiKxUEN2VQdbKjIdMg8QLWhJEg5rYDZSY6QyIKaTmWWfqCjJwNIvYfbkpqiNtm5CFHsQiHIDoCwa8vF8ICH6B9_kEjnNDAUTOGwyEQv4QtxQKcMs8zwtlNxwOFXzlH83i5KU
-除了 Added（新增）和 Changed（变更）之外，常见的记录类型还有：
 
-Deprecated（弃用）
-表示某些功能或特性不推荐使用了，可能会在未来版本中移除。
-
-Removed（移除）
-表示某些功能或特性已被删除。
-
-Fixed（修复）
-用于记录修复的 bug 或问题。
-
-Security（安全）
-表示修复了安全漏洞或对安全相关的改进。
 
