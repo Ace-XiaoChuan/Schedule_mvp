@@ -12,26 +12,35 @@ from core import config
 from core.logger import configure_logger
 import logging
 
-logger = logging.getLogger('schedule_mvp')  # 获取已有的 logger，不重新配置
+logger = logging.getLogger('schedule_mvp')  # getLogger()可以实现全局共享、单例模式，真的好方便
 
 
 class SimpleClassifier:
     def __init__(self, max_features=5000, n_estimators=100):  # 参数保留但不使用，仅为兼容
-        self.script_dir = Path(__file__).parent
+        self.script_dir = Path(__file__).parent  # ai
         self.data_path = config.config.DATA_PATH  # tasks.csv路径
         self.model_path = config.config.MODEL_DIR  # 模型保存路径
         logger.debug(f"模型数据为：{self.data_path}")
         logger.debug(f"数据路径为：{self.model_path}")
 
-        # 初始化BERT模型和分词器
+        # 初始化了一个 BERT 分词器（tokenizer）。
+        # from_pretrained('bert-base-chinese') 表示从预训练模型 'bert-base-chinese' 中加载分词器。
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-chinese')
+
+        # BertForSequenceClassification 是 Hugging Face 提供的一个 BERT 变体，专门用于分类任务，比如判断一段文本属于哪个类别。
+        # self.model 是这个模型的实例，后续会用来对文本进行分类预测。
         self.model = BertForSequenceClassification.from_pretrained(
             'bert-base-chinese',
             num_labels=3  # 分类数：工作、休闲、睡眠
         )
+
+        # 创建一个字典和反向映射字典。反向映射字典：将数字标签转换回中文标签，使用字典推导式，比较优雅
         self.label_map = {"工作": 0, "休闲": 1, "睡眠": 2}
         self.inverse_label_map = {v: k for k, v in self.label_map.items()}
+        # 检测并选择模型运行的设备（GPU 或 CPU）
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        # 将模型移动到指定的设备上
         self.model.to(self.device)
 
     def train(self):
