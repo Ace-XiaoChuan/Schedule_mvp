@@ -45,14 +45,21 @@ class SimpleClassifier:
 
     def train(self):
         """训练BERT模型并保存"""
-        # 加载数据
+        # 加载数据，data 是一个 DataFrame 对象，DataFrame 是一种二维的、带有标签的表格数据结构
         data = pd.read_csv(self.data_path)
+        # sample 方法用于从 DataFrame 中随机抽取样本。参数 frac=1 表示抽取所有的行，这样就打乱了顺序
+        # 在打乱顺序后，原来的索引会保留，reset_index进行索引重置
         data = data.sample(frac=1).reset_index(drop=True)  # 打乱数据
         logger.info(f"成功加载{len(data)}条真实样本数据")
 
         # 数据预处理
-        texts = data['text'].tolist()
+        texts = data['text'].tolist()  # 提取 text 列并转换为 Python 列表。
         labels = [self.label_map[label] for label in data['label']]
+
+        # padding=True：自动填充短文本以保证所有样本的长度一致。
+        # truncation=True：对过长的文本进行截断。
+        # max_length=32：设定最大文本长度为 32。
+        # return_tensors="pt"：返回 PyTorch 的张量格式。
         encodings = self.tokenizer(texts, padding=True, truncation=True, max_length=32, return_tensors="pt")
         dataset = TensorDataset(
             encodings['input_ids'],
@@ -99,12 +106,14 @@ class SimpleClassifier:
     def evaluate(self):
         """生成并显示混淆矩阵"""
         data = pd.read_csv(self.data_path)
-        labels = sorted(self.label_map.keys())
+        labels: list = sorted(self.label_map.keys())
 
-        # 划分训练和测试集
+        # 划分训练测试集、分层抽样
+        # x_train 和 y_train：训练集中的特征数据和对应的标签，eg:吃饭睡觉打豆豆，休闲
+        # x_test 和 y_test：测试集中的特征数据和对应的标签数据
         x_train, x_test, y_train, y_test = train_test_split(
             data['text'], data['label'],
-            test_size=0.2,
+            test_size=0.2,  # 训练集测试集8:2吧，以后如果引入验证集，那就6:2:2
             stratify=data['label'],
             random_state=42
         )
