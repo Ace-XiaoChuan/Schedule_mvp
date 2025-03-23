@@ -2,7 +2,7 @@
 tasks_service
 ---
 服务层，存放核心业务逻辑
-功能概述：调用仓储层接口，处理业务逻辑，避免直接操作数据库。
+功能概述：调用仓储层的接口，处理**领域操作**如时间格式验证
 """
 from core.exceptions import ValidationError
 from datetime import datetime

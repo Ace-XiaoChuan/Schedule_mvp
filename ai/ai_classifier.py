@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import pandas as pd
 from sklearn.pipeline import Pipeline
@@ -13,10 +15,10 @@ import seaborn as sns
 from core import config
 from core.logger import configure_logger
 
-logger = configure_logger()
+logger = logging.getLogger('schedule_mvp')
 
 
-# joblib 是一个用于 简化并行计算 和 高效序列化大型数据 的 Python 库。
+
 def chinese_tokenizer(text):
     # 全局函数
     return jieba.lcut(text)
