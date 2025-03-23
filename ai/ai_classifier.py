@@ -1,5 +1,4 @@
 import logging
-
 import numpy as np
 import pandas as pd
 from sklearn.pipeline import Pipeline
@@ -13,7 +12,7 @@ from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
 from core import config
-from core.logger import configure_logger
+
 
 logger = logging.getLogger('schedule_mvp')
 
