@@ -13,9 +13,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from core import config
 
-
 logger = logging.getLogger('schedule_mvp')
-
 
 
 def chinese_tokenizer(text):
@@ -59,21 +57,21 @@ class SimpleClassifier:
         # 打乱数据顺序，.sample()会抽样，frac=1即抽取100%的样本
         data = data.sample(frac=1).reset_index(drop=True)
         logger.info(f"成功加载{len(data)}条真实样本数据")
-        self.model.fit(data['text'], data['label'])
+        self.model.fit(data['text'], data['label'])  # 开始训练
         joblib.dump(self.model, self.model_path)
 
     def predict(self, text):
-        """返回预测结果，于main里被调用
+        """返回预测结果，于main里被调用，这套技术栈就手写，BERT就直接调用
         :param text: text = self.view.title_entry.get()
         :return: 预测结果(str)及预测准确率[30%,20%,10%]
         """
         # 老忘，这个model跟mvc的那个重名了，但是实际意思是上边构造函数训练好的分类器
         # self.model.predict([text]) 返回一个列表,第一个元素为最可能结果
-        pred:str = self.model.predict([text])[0]
+        pred: str = self.model.predict([text])[0]
 
         # predict_proba([text])返回二维数组，probs=predict_proba([text])[0]返回一维NumPy数组
         # nd:n-dimensional
-        probs:np.ndarray = self.model.predict_proba([text])[0]
+        probs: np.ndarray = self.model.predict_proba([text])[0]
         confidence = int(100 * np.max(probs))
         return pred, confidence
 
@@ -87,7 +85,7 @@ class SimpleClassifier:
         labels: list = sorted(data['label'].unique())
 
         print("数据分布统计:")
-        print(data['label'].value_counts())# 3
+        print(data['label'].value_counts())  # 3
 
         # 划分训练测试集、分层抽样
         # x_train 和 y_train：训练集中的特征数据和对应的标签，eg:吃饭睡觉打豆豆，休闲
