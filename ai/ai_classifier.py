@@ -55,7 +55,8 @@ class SimpleClassifier:
 
     def train(self):
         data = pd.read_csv(self.data_path)
-        # 新增，打乱数据顺序
+
+        # 打乱数据顺序，.sample()会抽样，frac=1即抽取100%的样本
         data = data.sample(frac=1).reset_index(drop=True)
         logger.info(f"成功加载{len(data)}条真实样本数据")
         self.model.fit(data['text'], data['label'])

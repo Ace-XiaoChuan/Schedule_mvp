@@ -1,5 +1,6 @@
 from controllers.task_controller import TaskController
 
+
 def main():
     app = TaskController()
     try:
