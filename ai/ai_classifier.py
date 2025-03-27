@@ -34,7 +34,7 @@ class SimpleClassifier:
         self.model = Pipeline([
             # TfidfVectorizer() 会将输入的文本数据转换成数值化的特征矩阵，每个单词的权重由其在文本中的频率和逆文档频率决定。
             ('tfidf', TfidfVectorizer(
-                ngram_range=(1, 2),
+                ngram_range=(1, 2),  # 提取文本中的词或短语的长度范围,(1, 2)：提取单个词和相邻两个词的上下文关系
                 tokenizer=chinese_tokenizer,  # 添加自定义分词器
                 token_pattern=None,  # 禁用默认正则分词
                 max_features=2000,  # 特征维度
@@ -42,8 +42,8 @@ class SimpleClassifier:
             )),
             # 第二个步骤：分类器。
             ('clf', RandomForestClassifier(
-                n_estimators=30,  # 树的数量
-                max_depth=5,
+                n_estimators=70,  # 树的数量
+                max_depth=5,#树太深会过拟合
                 min_samples_split=10,  # 增加分裂最小样本数
                 class_weight='balanced',
                 random_state=42  # 确保结果可复现
@@ -61,11 +61,11 @@ class SimpleClassifier:
         joblib.dump(self.model, self.model_path)
 
     def predict(self, text):
-        """返回预测结果，于main里被调用，这套技术栈就手写，BERT就直接调用
+        """返回预测结果，于main里被调用，这套技术栈predict使用Pipeline原生计算，BERT就调用BERT原生
         :param text: text = self.view.title_entry.get()
-        :return: 预测结果(str)及预测准确率[30%,20%,10%]
+        :return: 预测结果(str)及预测准确率：array（[30%,20%,10%]）
         """
-        # 老忘，这个model跟mvc的那个重名了，但是实际意思是上边构造函数训练好的分类器
+        # 这里model是上边构造函数训练好的分类器模型
         # self.model.predict([text]) 返回一个列表,第一个元素为最可能结果
         pred: str = self.model.predict([text])[0]
 
@@ -92,7 +92,7 @@ class SimpleClassifier:
         # x_test 和 y_test：测试集中的特征数据和对应的标签数据
         x_train, x_test, y_train, y_test = train_test_split(
             data['text'], data['label'],
-            test_size=0.2,  # 训练集测试集8:2吧，以后如果引入验证集，那就6:2:2
+            test_size=0.4,  # 训练集测试集6:4吧，以后如果引入验证集，那就6:2:2
             stratify=data['label'],
             random_state=42
         )
@@ -111,7 +111,9 @@ class SimpleClassifier:
 
         # 生成混淆矩阵
         cm = confusion_matrix(y_test, y_pred)
-        # 计算百分比
+
+        # 计算百分比，进行归一化，cm.sum(axis=1)按行求和，axis=1表示行方向
+        # np.newaxis 的作用是增加一个维度，将一维数组转换为二维列向量
         cm_percent = cm / cm.sum(axis=1)[:, np.newaxis]
 
         # 可视化:创建窗口
