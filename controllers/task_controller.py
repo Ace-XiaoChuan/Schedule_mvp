@@ -11,10 +11,10 @@ logger = configure_logger()
 
 
 class TaskController:
-    def __init__(self):
+    def __init__(self,view):
         logger.info("初始化控制器")
         self.container = Container()
-        self.view = MainView()  # 反向依赖了，不应该这样做，但是以后再重构吧
+        self.view = view
         self.model = self.container.models
 
         logger.info("初始化分类器...")

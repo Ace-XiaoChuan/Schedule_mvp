@@ -1,8 +1,10 @@
 from controllers.task_controller import TaskController
+from view import MainView
 
 
 def main():
-    app = TaskController()
+    view = MainView()
+    app = TaskController(view)
     try:
         app.run()
     finally:
