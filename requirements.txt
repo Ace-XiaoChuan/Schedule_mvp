@@ -112,3 +112,5 @@ jieba
 scikit-learn
 matplotlib
 seaborn
+uvicorn
+fastapi
