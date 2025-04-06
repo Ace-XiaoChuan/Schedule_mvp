@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>任务管理系统</h1>
+    
+    <!-- 任务提交表单 -->
+    <div>
+        <input type="text" id="title" placeholder="输入任务标题（自动分类）">
+        <button onclick="predictCategory()">预测分类</button>
+        <span id="categoryResult"></span>
+    </div>
+    
+    <!-- 任务列表 -->
+    <div id="taskList"></div>
+
+    <script>
+        // 自动分类
+        async function predictCategory() {
+            const title = document.getElementById('title').value;
+            const response = await fetch(`/classify?title=${encodeURIComponent(title)}`);
+            const result = await response.json();
+            document.getElementById('categoryResult').innerHTML = 
+                `AI建议分类：${result.category}（置信度 ${result.confidence}%）`;
+        }
+
+        // 加载任务列表
+        async function loadTasks() {
+            const response = await fetch('/tasks');
+            const data = await response.json();
+            document.getElementById('taskList').innerHTML = 
+                data.tasks.map(task => `<div>${task.title} - ${task.category}</div>`).join('');
+        }
+        loadTasks(); // 初始加载
+    </script>
+</body>
+</html>

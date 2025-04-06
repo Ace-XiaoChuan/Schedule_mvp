@@ -114,3 +114,4 @@ matplotlib
 seaborn
 uvicorn
 fastapi
+pydantic

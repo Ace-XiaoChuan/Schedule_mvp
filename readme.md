@@ -167,6 +167,11 @@ classDiagram
 
 见该目录下的CHANGELOG.md
 
+## 实际运行截图
+
+![](assets/example/2025-04-06-13-45-32.png)
+![](assets/example/2025-03-03-15-41-15.png)
+
 ### 模型训练
 
 系统使用RandomForest分类器，通过以下步骤进行训练：
@@ -177,7 +182,7 @@ classDiagram
 
 ## 贡献指南
 
-欢迎提交问题和改进建议！
+暂无，欢迎提交问题和改进建议！
 
 ## 版本历史
 
